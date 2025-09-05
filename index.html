@@ -5,60 +5,41 @@
   <title>Rs3 default example</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
 </head>
-  <header>
-    
-  </header>
-  <body class="nis">
-<header style="display: flex; justify-content: center; position: sticky; top: 0; z-index: 1000;">
+
+<body class="nis" style="margin: 0; padding: 0; height: 90vh; display: flex; flex-direction: column;">
+  <!-- Sticky Header -->
+  <header style="display: flex; justify-content: center; position: sticky; top: 0; z-index: 1000; flex-shrink: 0">
     <nav class="nis desktop">
-      <!-- Page Buttons -->
       <button class="nisbutton nissmallbutton" onclick="showPage('page1')">Home</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page2')">Herb Runs</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page3')">Tree Runs</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page4')">Fruit Tree Runs</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page5')">Bush Runs</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page6')">⚙ Settings</button>
-      
-      <!-- Inputs -->
       <div>
         <input type="text" class="nisinput" placeholder="Farming Level" style="width: 100px;">
         <button class="nisbutton2">Submit</button>
       </div>
-
-    </nav>
     </nav>
   </header>
-    <!-- Main Border Container -->
-    <div class="nismainborder nisborder" style="position: relative;">
-			
-      <!-- Separators -->
-      <!--<div class="nisseperator" style="top: 70px;"></div>
-      <div class="nisseperator" style="top: 100px;"></div> -->
-      
-      <!-- Scrollable Content -->
-      <div style="overflow-y: auto; ">
-        <h1>Herb Runs</h1>
-        <h6>(Same for Allotment/Flowers)</h6>
-        <p class="nistext">1</p>
-        <p class="nistext">2</p>
-        <p class="nistext">3</p>
-        <p class="nistext">4</p>
-        <p class="nistext">5</p>
-        <p class="nistext">6</p>
-        <p class="nistext">7</p>
-        <p class="nistext">8</p>
-        <p class="nistext">9</p>
-        <p class="nistext">10</p>
-      </div>
+
+  <!-- Main Bordered Container -->
+  <div class="nismainborder nisborder" style="display: flex; flex-direction: column; flex-grow: 1; max-height: 100vh; overflow: hidden; margin: 10px; margin-top: 70px;">
+    <!-- Scrollable Content -->
+    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;">
+      <h1>Herb Runs</h1>
+      <h6>(Same for Allotment/Flowers)</h6>
     </div>
-  <!-- Forward and Backward selection when in guide mode. -->
-      <div style="position: fixed; bottom: 0; ">
-        <button class="nisbutton">Previous</button>
-        <button class="nisbutton">Next</button>
-      </div>
-  </body>
-  
+
+    <!-- Buttons at Bottom -->
+    <div class="button-row" style="display: flex; justify-content: center; padding: 0px; border-top: 1px solid #666; background-color: #f666;">
+      <button class="nisbutton">Previous</button>
+      <button class="nisbutton">Next</button>
+    </div>
+  </div>
+
   <!-- Javascript -->
   <script>
   </script>
+</body>
 </html>
