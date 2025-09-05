@@ -2,59 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>NIS Styled Components</title>
+  <title>Rs3 default example</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
 </head>
-<body class="nis">
+  <header>
+    
+  </header>
+  <body class="nis">
+<header style="display: flex; justify-content: center; position: sticky; top: 0; z-index: 1000;">
+    <nav class="nis desktop">
+      <!-- Page Buttons -->
+      <button class="nisbutton nissmallbutton" onclick="showPage('page1')">Home</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page2')">Herb Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page3')">Tree Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page4')">Fruit Tree Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page5')">Bush Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page6')">⚙ Settings</button>
+      
+      <!-- Inputs -->
+      <div>
+        <input type="text" class="nisinput" placeholder="Farming Level" style="width: 100px;">
+        <button class="nisbutton2">Submit</button>
+      </div>
 
-  <!-- Main Border Container -->
-  <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
-
-    <!-- Exit Button -->
-    <div class="nisexitbutton" title="Close"></div>
-
-    <!-- Header Text -->
-    <h1 class="nistext">Welcome to NIS Styled Page</h1>
-
-    <!-- Separator -->
-    <div class="nisseperator" style="top: 60px;"></div>
-
-    <!-- Buttons -->
-    <button class="nisbutton">Primary Button</button>
-    <button class="nisbutton nissmallbutton">Small Button</button>
-    <button class="nisbutton2">Alt Button</button>
-
-    <!-- Inputs -->
-    <input type="text" class="nisinput" placeholder="Text input">
-    <select class="nisdropdown">
-      <option>Dropdown Option 1</option>
-      <option>Dropdown Option 2</option>
-    </select>
-
-    <!-- Image Button -->
-    <div class="nisimgbutton" title="Image Button"></div>
-
-    <!-- Table -->
-    <table class="nistable" style="margin-top: 20px; width: 100%;">
-      <thead>
-        <tr><th>Header 1</th><th>Header 2</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Row 1</td><td>Data</td></tr>
-        <tr><td>Row 2</td><td>Data</td></tr>
-      </tbody>
-    </table>
-
-    <!-- Scrollable Content -->
-    <div style="height: 100px; overflow-y: scroll; margin-top: 20px;">
-      <p class="nistext">This is a scrollable area. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-      <p class="nistext">More content to scroll through. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-      <p class="nistext">More content to scroll through. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-      <p class="nistext">More content to scroll through. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-      <p class="nistext">More content to scroll through. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-      <p class="nistext">More content to scroll through. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    </nav>
+    </nav>
+  </header>
+    <!-- Main Border Container -->
+    <div class="nismainborder nisborder" style="position: relative;">
+			
+      <!-- Separators -->
+      <!--<div class="nisseperator" style="top: 70px;"></div>
+      <div class="nisseperator" style="top: 100px;"></div> -->
+      
+      <!-- Scrollable Content -->
+      <div style="overflow-y: auto; ">
+        <h1>Herb Runs</h1>
+        <h6>(Same for Allotment/Flowers)</h6>
+        <p class="nistext">1</p>
+        <p class="nistext">2</p>
+        <p class="nistext">3</p>
+        <p class="nistext">4</p>
+        <p class="nistext">5</p>
+        <p class="nistext">6</p>
+        <p class="nistext">7</p>
+        <p class="nistext">8</p>
+        <p class="nistext">9</p>
+        <p class="nistext">10</p>
+      </div>
     </div>
-
-  </div>
-</body>
+  <!-- Forward and Backward selection when in guide mode. -->
+      <div style="position: fixed; bottom: 0; ">
+        <button class="nisbutton">Previous</button>
+        <button class="nisbutton">Next</button>
+      </div>
+  </body>
+  
+  <!-- Javascript -->
+  <script>
+  </script>
 </html>
