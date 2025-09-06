@@ -54,6 +54,15 @@
         display: flex;
       }
     }
+    
+    .scrollable-content {
+    display: none;
+    }
+
+    #page1 {
+      display: block;
+    }
+
   </style>
 
 <!-- Main -->
@@ -83,6 +92,7 @@
       <span></span>
     </div>
     
+    <!-- If website is in mobile mode -->
     <nav class="mobile" id="mobileMenu">
       <button class="nisbutton nissmallbutton" onclick="showPage('page1')">Home</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page2')">Herb Runs</button>
@@ -100,10 +110,36 @@
 
   <!-- Main Bordered Container -->
   <div class="nismainborder nisborder" style="display: flex; flex-direction: column; flex-grow: 1; max-height: 100vh; overflow: hidden; margin: 10px; margin-top: 70px;">
-    <!-- Scrollable Content -->
-    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;">
+    
+    <!-- Page 1 - Home -->
+    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page1">
+      <h1>Home</h1>
+    </div>
+    
+    <!-- Page 2 -Herb Runs -->
+    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page2">
       <h1>Herb Runs</h1>
       <h6>(Same for Allotment/Flowers)</h6>
+    </div>
+    
+    <!-- Page 3 -Tree Runs -->
+    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page3">
+      <h1>Tree Runs</h1>
+    </div>
+    
+    <!-- Page 4 -Fruit Tree Runs -->
+    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page4">
+      <h1>Fruit Tree Runs</h1>
+    </div>
+    
+    <!-- Page 5 -Bush Runs -->
+    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page5">
+      <h1>Bush Runs</h1>
+    </div>
+    
+    <!-- Page 6 -Settings -->
+    <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page6">
+      <h1>Settings</h1>
     </div>
 
     <!-- Buttons at Bottom -->
@@ -133,6 +169,25 @@
         menu.style.display = "none";
       }
     });
+    
+    <!-- Show individual pages -->
+    function showPage(pageId) {
+      const pages = document.querySelectorAll('.scrollable-content');
+      pages.forEach(page => {
+        page.style.display = 'none';
+      });
+
+      const activePage = document.getElementById(pageId);
+      if (activePage) {
+        activePage.style.display = 'block';
+      }
+    }
+
+    // Optional: Show default page on load
+    window.onload = () => showPage('page1');
+
+    
+    
   </script>
 </body>
 </html>
