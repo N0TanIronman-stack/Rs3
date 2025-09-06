@@ -2,6 +2,14 @@
   "appname": "Farming Helper",
   "description": "A tool to help get into farming runs",
   "appurl": "index.html",
-  "icon": "Farming_detail.png",
-  "apis": ["imagecapture", "overlay"]
+  "iconUrl": "./Farming_detail.png",
+  "defaultWidth": 283,
+  "defaultHeight": 149,
+  "minWidth":283,
+  "minHeight":149,
+  "maxWidth":283,
+  "maxHeight":149,
+  "requestHandlers": [],
+  "activators": [],
+  "permissions": "pixel,gamestate,overlay"
 }
