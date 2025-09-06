@@ -6,29 +6,16 @@
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
 </head>
   <style>
-    /* --- RESPONSIVE BEHAVIOR --- */
-    @media (max-width: 700px) {
-      nav.desktop {
-        display: none;
-      }
-      nav.mobile {
-        display: none;
-        flex-direction: column;
-        background: #333;
-        position: absolute;
-        top: 20px;
-        left: center;
-        padding: 10px;
-        border-radius: 8px;
-      }
-    nav.mobile a {
-      padding: 8px;
-      display: block;
+     
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
     }
-      /* --- HAMBURGER ICON --- */
+    
+    /* --- HAMBURGER ICON --- */
     .hamburger {
       display: none;
-      display: flex;
       flex-direction: column;
       cursor: pointer;
       gap: 5px;
@@ -40,6 +27,32 @@
       background: white;
       border-radius: 3px;
     }
+    
+    /* --- MOBILE MENU (HIDDEN BY DEFAULT) --- */
+    nav.mobile {
+      display: none;
+      flex-direction: column;
+      background: #333;
+      position: absolute;
+      top: 20px;
+      left: center;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    nav.mobile a {
+      padding: 8px;
+      display: block;
+    }
+    
+     /* --- RESPONSIVE BEHAVIOR --- */
+    @media (max-width: 700px) {
+      nav.desktop {
+        display: none;
+      }
+      .hamburger {
+        display: flex;
+      }
     }
   </style>
 
