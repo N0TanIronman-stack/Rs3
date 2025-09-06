@@ -1,5 +1,6 @@
 /* --- HAMBURGER ICON --- */
     .hamburger {
+      top: 5px;
       display: none;
       flex-direction: column;
       cursor: pointer;
