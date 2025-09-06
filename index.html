@@ -510,8 +510,8 @@
                 <br>
                 <!-- Buttons at Bottom -->
                 <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
-                    <button class="nisbutton nissmallbutton">Previous</button>
-                    <button class="nisbutton nissmallbutton">Next</button>
+                    <button class="nisbutton nissmallbutton prev-btn">Previous</button>
+  									<button class="nisbutton nissmallbutton next-btn">Next</button>
                 </div>
             </div>
 
@@ -640,6 +640,36 @@
         
             var x = document.getElementById("ShowSize");
             x.innerHTML = "Width: " + w + ", Height: " + h + ".";
+          
+          // Scroll to next Area
+          document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("next-btn") || e.target.classList.contains("prev-btn")) {
+              const page = e.target.closest(".scrollable-content"); // current page
+              const areas = [...page.querySelectorAll(".Area")];   // all Area divs inside
+              if (areas.length === 0) return;
+
+              // Find the closest Area currently in view
+              const scrollTop = page.scrollTop;
+              const currentIndex = areas.findIndex(area => area.offsetTop > scrollTop + 10) - 1;
+              const safeIndex = currentIndex < 0 ? 0 : currentIndex;
+
+              if (e.target.classList.contains("next-btn")) {
+                const next = areas[safeIndex + 1];
+                if (next) {
+                  page.scrollTo({ top: next.offsetTop, behavior: "smooth" });
+                }
+              }
+
+              if (e.target.classList.contains("prev-btn")) {
+                const prev = areas[safeIndex - 1];
+                if (prev) {
+                  page.scrollTo({ top: prev.offsetTop, behavior: "smooth" });
+                }
+              }
+            }
+          });
+          
+          
         </script>
 </body>
 
