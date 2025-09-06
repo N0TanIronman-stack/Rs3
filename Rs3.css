@@ -60,7 +60,6 @@
 
     .hidden {
       opacity: 0.3;       /* faded */
-      pointer-events: none;
     }
 
     #page1 {
