@@ -1,0 +1,7 @@
+{
+  "appname": "Farming Helper",
+  "description": "A tool to help get into farming runs",
+  "appurl": "index.html",
+  "icon": "Farming_detail.png",
+  "apis": ["imagecapture", "overlay"]
+}
