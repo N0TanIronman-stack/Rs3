@@ -5,9 +5,76 @@
     <meta charset="UTF-8">
     <title>Rs3 Farming Helper</title>
     <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
-  	<link rel="stylesheet" type="text/css" href="https://n0tanironman-stack.github.io/Rs3/Rs3.css">
+  	<!-- <link rel="stylesheet" type="text/css" href="https://n0tanironman-stack.github.io/Rs3/Rs3.css"> -->
 </head>
 <style>
+  /* --- HAMBURGER ICON --- */
+    .hamburger {
+      top: 5px;
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      width: 25px;
+      height: 3px;
+      background: white;
+      border-radius: 3px;
+    }
+    
+    /* --- MOBILE MENU (HIDDEN BY DEFAULT) --- */
+    nav.mobile {
+      display: none;
+      flex-direction: column;
+      background: #333;
+      position: absolute;
+      top: 20px;
+      left: center;
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 9999;
+    }
+
+    nav.mobile a {
+      padding: 8px;
+      display: block;
+    }
+    
+     /* --- RESPONSIVE BEHAVIOR --- */
+    @media (max-width: 700px) {
+      nav.desktop {
+        display: none;
+      }
+      .hamburger {
+        display: flex;
+      }
+    }
+    
+    .scrollable-content {
+    display: none;
+    }
+    
+    .icon {
+      max-height: 30px; 
+      max-width: 30px;
+      vertical-align: middle;
+      z-index: -99;
+    }
+    
+    div.Area {
+    font-size:150%;
+    text-decoration: underline;
+    }
+
+    .hidden {
+      opacity: 0.3;       /* faded */
+    }
+
+    #page1 {
+      display: block;
+    }
 </style>
 <!-- Main -->
 <body class="nis" style="margin: 0; padding: 0; height: 90vh; display: flex; flex-direction: column;">
@@ -63,19 +130,19 @@
 
                 <ul>
 
-                    <li data-max="80" title="Up to +6% Farming exp">
+                    <li data-max="80" title="Up to +6% Farming exp" data-hidden-title="Upgrade to Master Farming Outfit at 80">
                         <div style="display: inline-block;">Farmer's Outfit</div>
                         <img class="icon" src="https://runescape.wiki/images/Farmer's_jacket.png" />
                     </li>
                     <!-- Break -->
                     <br>
-                    <li class="checklist" data-min="80" title="+6% Farming exp &#013;+2% chance of saving seeds &#013;10% chance to harvest more herbs &#013;Herbs auto-cleaned on harvest &#013;Planted herbs are auto-watered.">
+                    <li class="checklist" data-min="80" title="+6% Farming exp &#013;+2% chance of saving seeds &#013;10% chance to harvest more herbs &#013;Herbs auto-cleaned on harvest &#013;Planted herbs are auto-watered." data-hidden-title="Requires 80 Farming">
                         <div style="display: inline-block;">Master Farmer Outfit</div>
                         <img class="icon" src="https://runescape.wiki/images/Master_farmer_jacket.png" />
                     </li>
                     <!-- Break -->
                     <br>
-                    <li data-min="99" title="+5% chance to instantly harvest all resources &#013;120 Cape applies Supercompot for free">
+                    <li data-min="99" title="+5% chance to instantly harvest all resources &#013;120 Cape applies Supercompost for free" data-hidden-title="Requires 99 Farming, cannot boost.">
                         <div style="display: inline-block;">Farming Skillcape</div>
                         <img class="icon" src="https://runescape.wiki/images/Farming_cape_(2006).png" />
                     </li>
@@ -106,13 +173,13 @@
                     </li>
                     <!-- Break -->
                     <br>
-                    <li data-min="25" title="10% chance to recover seeds from patches &#013;5% chance when removing a fully grown tree">
+                    <li data-min="25" title="10% chance to recover seeds from patches &#013;5% chance when removing a fully grown tree" data-hidden-title="Requires 25 Farming, buy from Daemonheim">
                         <div style="display: inline-block;">Scroll of Life</div>
                         <img class="icon" src="https://runescape.wiki/images/Scroll_of_life.png" />
                     </li>
                     <!-- Break -->
                     <br>
-                    <li data-min="54" title="Unlimited watering can">
+                    <li data-min="54" title="Unlimited watering can, add to toolbelt" data-hidden-title="Requires 54 Farming, complete Fairy Tale III">
                         <div style="display: inline-block;">Magic Watering Can</div>
                         <img class="icon" src="https://runescape.wiki/images/Magic_watering_can.png" />
                     </li>
@@ -224,8 +291,8 @@
 
             <!-- Trollheim-->
             <ul>
-                <li data-min="29">
-                    <div class="Area" title="We start here, as it's the furthest away from a teleport.">Trollheim</div>
+                <li data-min="29" title="We start here, as it's the furthest away from a teleport." data-hidden-title="Requires 29 Farming, complete My Arm's Big Adventure">
+                    <div class="Area" >Trollheim</div>
                     <ul>
                         <!-- Break -->
                         <br>
@@ -235,13 +302,13 @@
                             <ul>
                                 <!-- Break -->
                                 <br>
-                                <li data-min="29">
+                                <li>
                                     <div style="display: inline-block;">2 Fire Runes</div>
                                     <img class="icon" src="https://runescape.wiki/images/Fire_rune.png" />
                                 </li>
                                 <!-- Break -->
                                 <br>
-                                <li data-min="29">
+                                <li>
                                     <div style="display: inline-block;">2 Law Runes</div>
                                     <img class="icon" src="https://runescape.wiki/images/Law_rune.png" />
                                 </li>
@@ -326,7 +393,7 @@
             <!-- Prifddinas -->
             <div>
                 <ul>
-                    <li data-min="75">
+                    <li data-min="75" data-hidden-title="Requires 75 Farming, complete Plagues End">
                         <div class="Area">Prifddinas</div>
                         <ul>
                             <!-- Break -->
@@ -334,6 +401,11 @@
                             <li>
                                 <div style="display: inline-block;">Attuned Crystal Teleport Seed</div>
                                 <img class="icon" src="https://runescape.wiki/images/Attuned_crystal_teleport_seed.png" />
+                            </li>
+                          	<p>OR</p>
+                          	<li title="ALt+P">
+                                <div style="display: inline-block;">Prifddinas Lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Prifddinas_lodestone_icon.png" />
                             </li>
                         </ul>
                     </li>
@@ -349,13 +421,13 @@
                         <ul>
                             <!-- Break -->
                             <br>
-                            <li data-min="57">
+                            <li data-min="57" data-hidden-title="Requires 57 Farming, complete Ardougne Medium tasks">
                                 <div style="display: inline-block;">Manor Farm Teleport</div>
                                 <img class="icon" src="https://runescape.wiki/images/Manor_farm_Teleport_icon.png" />
                             </li>
                             <!-- Break -->
                             <br>
-                            <li data-max="57">
+                            <li data-max="57" data-hidden-title="Complete Ardougne Medium tasks, use Manor Farm Teleport">
                                 <div style="display: inline-block;">Ardougne Lodestone</div>
                                 <img class="icon" src="https://runescape.wiki/images/Ardougne_lodestone_icon.png" />
                             </li>
@@ -536,14 +608,30 @@
 
               if (isNaN(value) || value < minCheck || value > maxCheck) {
                 li.classList.add("hidden");
+
+                // swap to hidden title if provided
+                if (li.dataset.hiddenTitle) {
+                  li.setAttribute("title", li.dataset.hiddenTitle);
+                }
               } else {
                 li.classList.remove("hidden");
+
+                // restore the original title
+                if (li.dataset.originalTitle) {
+                  li.setAttribute("title", li.dataset.originalTitle);
+                }
               }
             });
           });
         
             //Show default page on load
             window.onload = () => showPage('page1');
+          	//Load original titles
+            listItems.forEach(li => {
+              if (!li.dataset.originalTitle) {
+                li.dataset.originalTitle = li.getAttribute("title") || "";
+              }
+            });
         
           	//Get Screen Size
             var w = window.innerWidth;
