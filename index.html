@@ -8,11 +8,8 @@
   	<link rel="stylesheet" type="text/css" href="https://n0tanironman-stack.github.io/Rs3/Rs3.css">
 </head>
 <style>
-    
 </style>
-
 <!-- Main -->
-
 <body class="nis" style="margin: 0; padding: 0; height: 90vh; display: flex; flex-direction: column;">
 
     <!-- Navigation Header -->
@@ -48,10 +45,10 @@
             <button class="nisbutton nissmallbutton" onclick="showPage('page5')">Bush Runs</button>
             <button class="nisbutton nissmallbutton" onclick="showPage('page6')">⚙ Settings</button>
             <!-- Farming Input -->
-            <div>
-                <input type="text" class="nisinput" placeholder="Farming Level" style="width: 100px;">
-                <button class="nisbutton2">Submit</button>
-            </div>
+            <form id="filterForm">
+              <input type="text" class="nisinput" id="filterInput" placeholder="Farming Level" style="width: 100px;">
+              <button class="nisbutton2" type="submit">Submit</button>
+            </form>
         </nav>
     </header>
 
@@ -72,7 +69,7 @@
                     </li>
                     <!-- Break -->
                     <br>
-                    <li data-min="80" title="+6% Farming exp &#013;+2% chance of saving seeds &#013;10% chance to harvest more herbs &#013;Herbs auto-cleaned on harvest &#013;Planted herbs are auto-watered.">
+                    <li class="checklist" data-min="80" title="+6% Farming exp &#013;+2% chance of saving seeds &#013;10% chance to harvest more herbs &#013;Herbs auto-cleaned on harvest &#013;Planted herbs are auto-watered.">
                         <div style="display: inline-block;">Master Farmer Outfit</div>
                         <img class="icon" src="https://runescape.wiki/images/Master_farmer_jacket.png" />
                     </li>
@@ -518,10 +515,37 @@
                 activePage.style.display = 'block';
               }
             }
+          
+          // Hide from list if level is too low
+          const form = document.getElementById("filterForm");
+          const input = document.getElementById("filterInput");
+
+          // Select all <li> that have data-min or data-max attributes
+          const listItems = document.querySelectorAll("li[data-min], li[data-max]");
+
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const value = parseInt(input.value, 10);
+
+            listItems.forEach(li => {
+              const minValue = parseInt(li.getAttribute("data-min"), 10);
+              const maxValue = parseInt(li.getAttribute("data-max"), 10);
+
+              const minCheck = isNaN(minValue) ? -Infinity : minValue;
+              const maxCheck = isNaN(maxValue) ? Infinity : maxValue;
+
+              if (isNaN(value) || value < minCheck || value > maxCheck) {
+                li.classList.add("hidden");
+              } else {
+                li.classList.remove("hidden");
+              }
+            });
+          });
         
-            // Optional: Show default page on load
+            //Show default page on load
             window.onload = () => showPage('page1');
         
+          	//Get Screen Size
             var w = window.innerWidth;
             var h = window.innerHeight;
         
