@@ -2,16 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Rs3 Farm Run Guide</title>
+  <title>Rs3 Farming Helper</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
 </head>
   <style>
-     
-    nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
     
     /* --- HAMBURGER ICON --- */
     .hamburger {
@@ -113,7 +107,6 @@
     
     <!-- Page 1 - Home -->
     <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page1">
-      <h1>Home</h1>
       <div id="page1" class="page checklist-wrapper">
     <h2>Useful items for any Farming run</h2>
     <h4>(Hover for more information)</h4>
@@ -282,12 +275,13 @@
     <!-- Page 6 -Settings -->
     <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page6">
       <h1>Settings</h1>
+      <h1 id="ShowSize"></h1>
     </div>
 
     <!-- Buttons at Bottom -->
     <div class="button-row" style="display: flex; justify-content: center; padding: 0px; border-top: 1px solid #666; background-color: #f666;">
-      <button class="nisbutton">Previous</button>
-      <button class="nisbutton">Next</button>
+      <button class="nisbutton nissmallbutton">Previous</button>
+      <button class="nisbutton nissmallbutton">Next</button>
     </div>
   </div>
 
@@ -328,7 +322,11 @@
     // Optional: Show default page on load
     window.onload = () => showPage('page1');
 
-    
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+
+    var x = document.getElementById("ShowSize");
+    x.innerHTML = "Width: " + w + ", Height: " + h + ".";
     
   </script>
 </body>
