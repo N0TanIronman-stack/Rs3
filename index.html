@@ -2,13 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Rs3 default example</title>
+  <title>Rs3 Farm Run Guide</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
 </head>
+  <style>
+    /* --- RESPONSIVE BEHAVIOR --- */
+    @media (max-width: 700px) {
+      nav.desktop {
+        display: none;
+      }
+      nav.mobile {
+        display: none;
+        flex-direction: column;
+        background: #333;
+        position: absolute;
+        top: 20px;
+        left: center;
+        padding: 10px;
+        border-radius: 8px;
+      }
+    nav.mobile a {
+      padding: 8px;
+      display: block;
+    }
+      /* --- HAMBURGER ICON --- */
+    .hamburger {
+      display: none;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      gap: 5px;
+    }
 
+    .hamburger span {
+      width: 25px;
+      height: 3px;
+      background: white;
+      border-radius: 3px;
+    }
+    }
+  </style>
+
+<!-- Main -->
 <body class="nis" style="margin: 0; padding: 0; height: 90vh; display: flex; flex-direction: column;">
-  <!-- Sticky Header -->
+  
+  <!-- Navigation Header -->
   <header style="display: flex; justify-content: center; position: sticky; top: 0; z-index: 1000; flex-shrink: 0">
+    <!-- If website is in desktop mode -->
     <nav class="nis desktop">
       <button class="nisbutton nissmallbutton" onclick="showPage('page1')">Home</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page2')">Herb Runs</button>
@@ -16,10 +56,27 @@
       <button class="nisbutton nissmallbutton" onclick="showPage('page4')">Fruit Tree Runs</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page5')">Bush Runs</button>
       <button class="nisbutton nissmallbutton" onclick="showPage('page6')">⚙ Settings</button>
+      
+      <!-- Farming Input -->
       <div>
         <input type="text" class="nisinput" placeholder="Farming Level" style="width: 100px;">
         <button class="nisbutton2">Submit</button>
       </div>
+    </nav>
+    
+    <div class="hamburger" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    
+    <nav class="mobile" id="mobileMenu">
+      <button class="nisbutton nissmallbutton" onclick="showPage('page1')">Home</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page2')">Herb Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page3')">Tree Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page4')">Fruit Tree Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page5')">Bush Runs</button>
+      <button class="nisbutton nissmallbutton" onclick="showPage('page6')">⚙ Settings</button>
     </nav>
   </header>
 
@@ -40,6 +97,24 @@
 
   <!-- Javascript -->
   <script>
+    // Swaps text to Hamburger menu when screen size is too small
+    function toggleMenu() {
+      const menu = document.getElementById("mobileMenu");
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener("click", function (event) {
+      const menu = document.getElementById("mobileMenu");
+      const hamburger = document.querySelector(".hamburger");
+
+      // If menu is open and click is outside both menu and hamburger
+      if (menu.style.display === "flex" && 
+          !menu.contains(event.target) && 
+          !hamburger.contains(event.target)) {
+        menu.style.display = "none";
+      }
+    });
   </script>
 </body>
 </html>
