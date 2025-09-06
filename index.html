@@ -5,78 +5,79 @@
     <meta charset="UTF-8">
     <title>Rs3 Farming Helper</title>
     <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
-  	<!-- <link rel="stylesheet" type="text/css" href="https://n0tanironman-stack.github.io/Rs3/Rs3.css"> -->
+    <!-- <link rel="stylesheet" type="text/css" href="https://n0tanironman-stack.github.io/Rs3/Rs3.css"> -->
 </head>
 <style>
-  /* --- HAMBURGER ICON --- */
-    .hamburger {
-      top: 5px;
-      display: none;
-      flex-direction: column;
-      cursor: pointer;
-      gap: 5px;
-    }
-
-    .hamburger span {
-      width: 25px;
-      height: 3px;
-      background: white;
-      border-radius: 3px;
-    }
+    /* --- HAMBURGER ICON --- */
+        .hamburger {
+          top: 5px;
+          display: none;
+          flex-direction: column;
+          cursor: pointer;
+          gap: 5px;
+        }
     
-    /* --- MOBILE MENU (HIDDEN BY DEFAULT) --- */
-    nav.mobile {
-      display: none;
-      flex-direction: column;
-      background: #333;
-      position: absolute;
-      top: 20px;
-      left: center;
-      padding: 10px;
-      border-radius: 8px;
-      z-index: 9999;
-    }
-
-    nav.mobile a {
-      padding: 8px;
-      display: block;
-    }
+        .hamburger span {
+          width: 25px;
+          height: 3px;
+          background: white;
+          border-radius: 3px;
+        }
+        
+        /* --- MOBILE MENU (HIDDEN BY DEFAULT) --- */
+        nav.mobile {
+          display: none;
+          flex-direction: column;
+          background: #333;
+          position: absolute;
+          top: 20px;
+          left: center;
+          padding: 10px;
+          border-radius: 8px;
+          z-index: 9999;
+        }
     
-     /* --- RESPONSIVE BEHAVIOR --- */
-    @media (max-width: 700px) {
-      nav.desktop {
+        nav.mobile a {
+          padding: 8px;
+          display: block;
+        }
+        
+         /* --- RESPONSIVE BEHAVIOR --- */
+        @media (max-width: 700px) {
+          nav.desktop {
+            display: none;
+          }
+          .hamburger {
+            display: flex;
+          }
+        }
+        
+        .scrollable-content {
         display: none;
-      }
-      .hamburger {
-        display: flex;
-      }
-    }
+        }
+        
+        .icon {
+          max-height: 30px; 
+          max-width: 30px;
+          vertical-align: middle;
+          z-index: -99;
+        }
+        
+        div.Area {
+        font-size:150%;
+        text-decoration: underline;
+        }
     
-    .scrollable-content {
-    display: none;
-    }
+        .hidden {
+          opacity: 0.3;       /* faded */
+        }
     
-    .icon {
-      max-height: 30px; 
-      max-width: 30px;
-      vertical-align: middle;
-      z-index: -99;
-    }
-    
-    div.Area {
-    font-size:150%;
-    text-decoration: underline;
-    }
-
-    .hidden {
-      opacity: 0.3;       /* faded */
-    }
-
-    #page1 {
-      display: block;
-    }
+        #page1 {
+          display: block;
+        }
 </style>
 <!-- Main -->
+
 <body class="nis" style="margin: 0; padding: 0; height: 90vh; display: flex; flex-direction: column;">
 
     <!-- Navigation Header -->
@@ -113,14 +114,14 @@
             <button class="nisbutton nissmallbutton" onclick="showPage('page6')">⚙ Settings</button>
             <!-- Farming Input -->
             <form id="filterForm">
-              <input type="text" class="nisinput" id="filterInput" placeholder="Farming Level" style="width: 100px;">
-              <button class="nisbutton2" type="submit">Submit</button>
+                <input type="text" class="nisinput" id="filterInput" placeholder="Farming Level" style="width: 100px;">
+                <button class="nisbutton2" type="submit">Submit</button>
             </form>
         </nav>
     </header>
 
     <!-- Main Bordered Container -->
-    <div class="nismainborder nisborder" style="display: flex; flex-direction: column; flex-grow: 1; max-height: 100vh; overflow: hidden; margin: 10px; margin-top: 35px;">
+    <div class="nismainborder nisborder" style="display: flex; flex-direction: column; flex-grow: 1; max-height: 100vh; overflow: hidden; margin: 0px; margin-top: 35px;">
 
         <!-- Page 1 - Home -->
         <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page1">
@@ -292,7 +293,7 @@
             <!-- Trollheim-->
             <ul>
                 <li data-min="29" title="We start here, as it's the furthest away from a teleport." data-hidden-title="Requires 29 Farming, complete My Arm's Big Adventure">
-                    <div class="Area" >Trollheim</div>
+                    <div class="Area">Trollheim</div>
                     <ul>
                         <!-- Break -->
                         <br>
@@ -402,8 +403,8 @@
                                 <div style="display: inline-block;">Attuned Crystal Teleport Seed</div>
                                 <img class="icon" src="https://runescape.wiki/images/Attuned_crystal_teleport_seed.png" />
                             </li>
-                          	<p>OR</p>
-                          	<li title="ALt+P">
+                            <p>OR</p>
+                            <li title="ALt+P">
                                 <div style="display: inline-block;">Prifddinas Lodestone</div>
                                 <img class="icon" src="https://runescape.wiki/images/Prifddinas_lodestone_icon.png" />
                             </li>
@@ -508,7 +509,7 @@
                 <!-- Break -->
                 <br>
                 <!-- Buttons at Bottom -->
-                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 24px; left: 14px; bottom: 15px; background-color: #f666; z-index: 1000;">
+                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
                     <button class="nisbutton nissmallbutton">Previous</button>
                     <button class="nisbutton nissmallbutton">Next</button>
                 </div>
@@ -518,7 +519,7 @@
             <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page3">
                 <h1>Tree Runs</h1>
                 <!-- Buttons at Bottom -->
-                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 24px; left: 14px; bottom: 15px; background-color: #f666; z-index: 1000;">
+                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
                     <button class="nisbutton nissmallbutton">Previous</button>
                     <button class="nisbutton nissmallbutton">Next</button>
                 </div>
@@ -528,7 +529,7 @@
             <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page4">
                 <h1>Fruit Tree Runs</h1>
                 <!-- Buttons at Bottom -->
-                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 24px; left: 14px; bottom: 15px; background-color: #f666; z-index: 1000;">
+                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
                     <button class="nisbutton nissmallbutton">Previous</button>
                     <button class="nisbutton nissmallbutton">Next</button>
                 </div>
@@ -538,7 +539,7 @@
             <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page5">
                 <h1>Bush Runs</h1>
                 <!-- Buttons at Bottom -->
-                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 24px; left: 14px; bottom: 15px; background-color: #f666; z-index: 1000;">
+                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
                     <button class="nisbutton nissmallbutton">Previous</button>
                     <button class="nisbutton nissmallbutton">Next</button>
                 </div>
