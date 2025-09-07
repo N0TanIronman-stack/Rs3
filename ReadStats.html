@@ -18,7 +18,11 @@
   <!-- Is it in Alt1 -->
   <script>
     if (!window.alt1) {
-      alert("This app must be run inside Alt1 client!");
+      //alert("This app must be run inside Alt1 client!");
+    }
+    else
+    {
+      alert("Alt1 Found");
     }
   </script>
   <!-- Read User's Stats -->
@@ -28,6 +32,7 @@
         alert("Pixel permission not granted!");
         return;
       }
+        
 
       // Example: bind a region (x, y, width, height)
       // You’ll need to find the coordinates for where stats are drawn on screen
