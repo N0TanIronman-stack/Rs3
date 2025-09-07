@@ -11,104 +11,74 @@
       font-weight: bold;
       color: lime;
     }
-    button {
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body class="nis">
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>RS3 Stats Detector</h2>
     <button onclick="startFinder()">Start Stats Finder</button>
-    <div id="status">Status: Waiting...</div>
+    <div id="status">Waiting…</div>
   </div>
 
   <script>
-    const statsReader = new a1lib.ImageDetect("./statanchor.png");
-    let findInterval = null;
-    let statsPos = null;
-    const TIMEOUT = 30000; // 30-second search timeout
-
-    function updateStatus(msg, color='lime') {
+    function setStatus(msg, color = "lime") {
+      const el = document.getElementById("status");
+      el.innerText = msg;
+      el.style.color = color;
       console.log(msg);
-      const statusDiv = document.getElementById("status");
-      statusDiv.innerText = "Status: " + msg;
-      statusDiv.style.color = color;
     }
 
-    function showOverlay(rect, color=[255,0,0,128], duration=3000) {
-      alt1.overLayRect(color, rect.x, rect.y, rect.width, rect.height, duration, 2);
-    }
+    // Confirm Alt1
+    a1lib.on("ready", () => {
+      if (window.alt1) {
+        setStatus("Alt1 detected ✅");
+        alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
+      } else {
+        setStatus("Not running in Alt1 ❌", "red");
+      }
+    });
 
-    function ensureAlt1Ready() {
-      return new Promise((resolve, reject) => {
-        if (!window.alt1) {
-          updateStatus("Not running in Alt1 ❌", 'red');
-          alert("This app must be run inside Alt1!");
-          reject("Not in Alt1");
-          return;
-        }
-        alt1.ready(() => {
-          updateStatus("Alt1 detected ✅");
-          resolve();
-        });
-      });
-    }
-
-    async function startFinder() {
-      try {
-        await ensureAlt1Ready();
-      } catch(e) { return; }
-
+    function startFinder() {
+      if (!window.alt1) {
+        setStatus("Not running in Alt1 ❌", "red");
+        return;
+      }
       if (!alt1.permissionPixel) {
-        alert("Pixel permission not granted! Check Alt1 settings.");
+        setStatus("Pixel permission not granted ❌", "red");
         return;
       }
 
-      // Load anchor image
-      updateStatus("Loading anchor image...");
-      try {
-        await statsReader.load();
-        updateStatus("Anchor loaded ✅");
-        statsReader.overLay(200, 200, 10000); // display anchor for reference
-      } catch(err) {
-        console.error("Anchor load error:", err);
-        updateStatus("Error loading anchor ❌", 'red');
-        return;
+      setStatus("Scanning screen for stats window…");
+
+      // Example: scan a fixed region (adjust these numbers as needed)
+      let regionX = 1000, regionY = 100, regionW = 300, regionH = 500;
+      let pixels = alt1.getPixels(regionX, regionY, regionW, regionH);
+
+      let found = false;
+
+      // Scan for a strong red pixel (Hitpoints heart)
+      for (let i = 0; i < pixels.length; i += 4) {
+        let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+        if (r > 180 && g < 80 && b < 80) {
+          found = true;
+          let px = (i / 4) % regionW;
+          let py = Math.floor((i / 4) / regionW);
+
+          // Overlay box where found
+          alt1.overLayRect(
+            a1lib.mixcolor(255, 0, 0),
+            regionX + px - 5, regionY + py - 5,
+            20, 20,
+            5000, 3
+          );
+          setStatus(`Stats window detected at ~X:${regionX+px}, Y:${regionY+py}`);
+          break;
+        }
       }
 
-      // Start search interval
-      const startTime = Date.now();
-      updateStatus("Searching for stats window...");
-
-      findInterval = setInterval(async () => {
-        if (Date.now() - startTime > TIMEOUT) {
-          clearInterval(findInterval);
-          updateStatus("Stats not found within timeout ❌", 'red');
-          return;
-        }
-
-        try {
-          const matches = await statsReader.find();
-          console.log("Matches found:", matches);
-
-          if (matches.length > 0) {
-            statsPos = matches[0];
-            clearInterval(findInterval);
-
-            // Overlay rectangle & text for found stats
-            showOverlay({x: statsPos.x, y: statsPos.y, width: 150, height: 200}, [0,255,0,128], 5000);
-            alt1.overLayText("Stats Found!", [255,255,0,255], 20, statsPos.x, statsPos.y - 25, 5000);
-
-            updateStatus(`Stats window found at X: ${statsPos.x} Y: ${statsPos.y} ✅`);
-          } else {
-            updateStatus("Searching for stats window...");
-          }
-        } catch(err) {
-          console.error("Error during search:", err);
-          updateStatus("Error during search ❌", 'red');
-        }
-      }, 1000);
+      if (!found) {
+        setStatus("Could not detect stats window ❌", "red");
+      }
     }
   </script>
 </body>
