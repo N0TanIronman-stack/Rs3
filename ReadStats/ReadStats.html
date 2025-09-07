@@ -17,10 +17,10 @@
   <script>
     let statsReader = new a1lib.ImageDetect("./statanchor.png");
     let statsPos = null;
-    let loadingCount = 0;
     let findStats = null;
 
-    window.onload = function () {
+    // Ensure Alt1 is ready before we do anything
+    a1lib.on("ready", () => {
       if (window.alt1) {
         alt1.overLayText("Alt1 detected!", a1lib.mixcolor(0, 255, 0), 30, 200, 200, 3000);
         console.log("Alt1 detected ✅");
@@ -28,7 +28,7 @@
       } else {
         alert("This app must be run inside the Alt1 client!");
       }
-    }
+    });
 
     function startFinder() {
       if (!window.alt1) {
@@ -41,42 +41,34 @@
         return;
       }
 
-      // Reset if rerun
-      statsPos = null;
-      loadingCount = 0;
-      if (findStats) clearInterval(findStats);
+      statsReader.load().then(() => {
+        console.log("Anchor loaded, w:", statsReader.img.width, "h:", statsReader.img.height);
+        document.getElementById("output").innerText = "Anchor image loaded. Searching...";
 
-      // Start loop
-      findStats = setInterval(function () {
-        if (statsPos === null) {
-          try {
-            let dots = ".".repeat((loadingCount % 3) + 1);
-            document.getElementById("output").innerText = "Looking for stats window" + dots;
-            loadingCount++;
+        // For debugging: overlay the anchor image on screen at (200,200) so you can see it
+        statsReader.overLay(200, 200, 5000);
 
-            // Run search
-            statsReader.find().then(matches => {
-              if (matches.length > 0) {
-                statsPos = matches[0];
-                clearInterval(findStats);
+        findStats = setInterval(function () {
+          statsReader.find().then(matches => {
+            if (matches.length > 0) {
+              statsPos = matches[0];
+              clearInterval(findStats);
 
-                // Overlay rectangle + label
-                alt1.overLayRect(a1lib.mixcolor(255, 0, 0), statsPos.x, statsPos.y, 150, 200, 5000, 3);
-                alt1.overLayText("Stats Found", a1lib.mixcolor(255, 255, 0), 20, statsPos.x, statsPos.y - 25, 5000);
+              alt1.overLayRect(a1lib.mixcolor(255, 0, 0), statsPos.x, statsPos.y, 150, 200, 5000, 3);
+              alt1.overLayText("Stats Found", a1lib.mixcolor(255, 255, 0), 20, statsPos.x, statsPos.y - 25, 5000);
 
-                document.getElementById("output").innerText =
-                  "Stats window found at X: " + statsPos.x + " Y: " + statsPos.y;
-                console.log("Stats window found:", statsPos);
-              }
-            });
-
-          } catch (e) {
-            document.getElementById("output").innerText = "Error: " + e.message;
-            console.log("Error:", e.message);
-            clearInterval(findStats);
-          }
-        }
-      }, 500);
+              document.getElementById("output").innerText =
+                "Stats window found at X: " + statsPos.x + " Y: " + statsPos.y;
+              console.log("Stats window found:", statsPos);
+            } else {
+              document.getElementById("output").innerText = "Searching for stats window...";
+            }
+          });
+        }, 1000);
+      }).catch(err => {
+        console.error("Error loading anchor:", err);
+        document.getElementById("output").innerText = "Error loading anchor image.";
+      });
     }
   </script>
 </body>
