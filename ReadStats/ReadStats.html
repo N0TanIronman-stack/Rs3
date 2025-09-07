@@ -10,23 +10,30 @@
   <div id="output" style="font-weight:bold; color:lime;"></div>
 
   <script>
-    // Step 1: check if alt1lib.js loaded at all
-    console.log("Script loaded, window.alt1 =", window.alt1);
+    function updateOutput(msg) {
+      console.log(msg);
+      document.getElementById("output").innerText = msg;
+    }
 
-    // Step 2: try event hook
-    if (window.a1lib && a1lib.on) {
-      a1lib.on("ready", () => {
-        console.log("a1lib ready event fired!");
-        if (window.alt1) {
-          alt1.overLayText("Alt1 detected!", a1lib.mixcolor(0, 255, 0), 30, 200, 200, 3000);
-          document.getElementById("output").innerText = "Alt1 detected ✅";
-        } else {
-          document.getElementById("output").innerText = "Alt1lib ready, but no alt1 found";
-        }
-      });
+    // Check if Alt1 is present immediately
+    if (window.alt1) {
+      updateOutput("Alt1 detected immediately ✅");
+      alt1.overLayText("Alt1 detected!", [0,255,0,255], 30, 200, 200, 3000);
     } else {
-      console.log("a1lib not present at all");
-      document.getElementById("output").innerText = "Not running in Alt1";
+      updateOutput("Alt1 not detected yet, waiting for ready event...");
+
+      // Fallback using alt1.ready
+      if (window.alt1) {
+        alt1.ready(() => {
+          updateOutput("Alt1 ready event fired ✅");
+          alt1.overLayText("Alt1 ready!", [0,255,0,255], 30, 200, 200, 3000);
+        });
+      } else {
+        // In case Alt1 never loads (e.g., opened in browser)
+        setTimeout(() => {
+          if (!window.alt1) updateOutput("Not running in Alt1 ❌");
+        }, 3000);
+      }
     }
   </script>
 </body>
