@@ -2,20 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.2</title>
+  <title>RS3 Stats Detector v1.3</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
-    #status {
-      margin-top: 10px;
-      font-weight: bold;
-      color: lime;
-    }
-    #version {
-      margin-top: 5px;
-      font-size: 12px;
-      color: gray;
-    }
+    #status { margin-top: 10px; font-weight: bold; color: lime; }
+    #version { margin-top: 5px; font-size: 12px; color: gray; }
   </style>
 </head>
 <body class="nis">
@@ -23,7 +15,7 @@
     <h2>RS3 Stats Detector</h2>
     <button onclick="startFinder()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
-    <div id="version">Build v1.2</div>
+    <div id="version">Build v1.3 (diagnostic)</div>
   </div>
 
   <script>
@@ -53,80 +45,74 @@
         return;
       }
 
-      // fallback screen size
       const screenW = alt1.rsWidth || 800;
       const screenH = alt1.rsHeight || 600;
-      setStatus(`Scanning screen (${screenW}x${screenH})…`);
+
+      setStatus(`Screen size: ${screenW}x${screenH} — beginning scan…`);
 
       const tileSize = 300;
       let x = 0, y = 0;
-      let found = false;
       let chunkCounter = 0;
 
       function scanNextChunk() {
-        // stop if already found
-        if (found) return;
+        chunkCounter++;
 
-        // stop when past screen
+        // Stop condition
         if (y >= screenH) {
-          if (!found) setStatus("Stats window not found ❌", "red");
+          setStatus("Finished scan — no match ❌", "red");
           return;
         }
 
-        chunkCounter++;
         setStatus(`Scanning chunk #${chunkCounter} at (${x},${y})`);
 
         let w = Math.min(tileSize, screenW - x);
         let h = Math.min(tileSize, screenH - y);
 
-        // Debug overlay for current chunk
+        // Debug overlay
         alt1.overLayRect(
           a1lib.mixcolor(0, 255, 255),
           x, y, w, h,
           500, 1
         );
 
+        // Attempt to grab pixels
         let pixels = alt1.getPixels(x, y, w, h);
+
         if (!pixels) {
-          setStatus("getPixels() returned null ❌", "red");
-          return;
+          setStatus(`Chunk #${chunkCounter}: getPixels() returned null ❌`, "red");
+        } else {
+          setStatus(`Chunk #${chunkCounter}: got ${pixels.length} bytes`);
         }
 
-        let match = null;
-
-        for (let i = 0; i < pixels.length; i += 4) {
-          let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-
-          if ((r > 120 && r > g + 40 && r > b + 40) ||     // red heart
-              (g > 120 && g > r + 40 && g > b + 40) ||     // green herb
-              (b > 120 && b > r + 40 && b > g + 40)) {     // blue prayer
-            let px = (i / 4) % w;
-            let py = Math.floor((i / 4) / w);
-            match = {x: x + px, y: y + py};
-            break;
+        // --- Simplified color scan ---
+        if (pixels) {
+          let found = false;
+          for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+            if (r > 200 && g < 80 && b < 80) { // bright red pixel
+              found = true;
+              let px = (i / 4) % w;
+              let py = Math.floor((i / 4) / w);
+              let absX = x + px, absY = y + py;
+              alt1.overLayRect(
+                a1lib.mixcolor(255, 0, 0),
+                absX - 5, absY - 5, 20, 20,
+                5000, 3
+              );
+              setStatus(`Found red pixel at ~X:${absX}, Y:${absY} ✅`);
+              return;
+            }
           }
         }
 
-        if (match) {
-          found = true;
-          alt1.overLayRect(
-            a1lib.mixcolor(255, 0, 0),
-            match.x - 5, match.y - 5,
-            20, 20,
-            5000, 3
-          );
-          setStatus(`Stats window detected at ~X:${match.x}, Y:${match.y}`);
-          return;
-        }
-
-        // move to next chunk
+        // Move to next chunk
         x += tileSize;
         if (x >= screenW) {
           x = 0;
           y += tileSize;
         }
 
-        setTimeout(scanNextChunk, 200); // slower so you can see it stepping
+        setTimeout(scanNextChunk, 500); // slow so we can observe
       }
 
       scanNextChunk();
