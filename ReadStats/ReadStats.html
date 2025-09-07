@@ -15,71 +15,53 @@
   </div>
 
   <script>
-    let statsReader = new a1lib.ImageDetect("./statanchor.png");
-    let statsPos = null;
-    let findStats = null;
+let statsReader = new a1lib.ImageDetect("./statanchor.png");
+let statsPos = null;
+let findStats = null;
 
-    function updateOutput(msg) {
-      console.log(msg);
-      document.getElementById("output").innerText = msg;
-    }
+function updateOutput(msg) {
+    console.log(msg);
+    document.getElementById("output").innerText = msg;
+}
 
-    // Ensure Alt1 is ready
-    if (window.alt1) {
-      alt1.ready(() => {
-        updateOutput("Alt1 detected ✅");
-        // Overlay text to indicate Alt1 is ready
-        alt1.overLayText("Alt1 detected!", [0,255,0,255], 30, 200, 200, 3000);
-      });
-    } else {
-      updateOutput("Not running in Alt1 ❌");
-      alert("This app must be run inside the Alt1 client!");
-    }
+function startFinder() {
+    if (!window.alt1) { alert("Not running in Alt1!"); return; }
+    if (!alt1.permissionPixel) { alert("Pixel permission not granted!"); return; }
 
-    function startFinder() {
-      if (!window.alt1) {
-        alert("Not running in Alt1!");
-        return;
-      }
+    statsReader.load().then(() => {
+        updateOutput("Anchor image loaded ✅");
+        console.log("Anchor img:", statsReader.img);
 
-      if (!alt1.permissionPixel) {
-        alert("Pixel permission not granted! Check Alt1 settings.");
-        return;
-      }
-
-      statsReader.load().then(() => {
-        updateOutput("Anchor image loaded. Searching...");
-
-        // Overlay the anchor image on screen for debugging
-        statsReader.overLay(200, 200, 5000);
+        // Overlay the anchor for reference
+        statsReader.overLay(200, 200, 10000);
 
         findStats = setInterval(async function () {
-          try {
-            const matches = await statsReader.find();
-            if (matches.length > 0) {
-              statsPos = matches[0];
-              clearInterval(findStats);
+            try {
+                const matches = await statsReader.find();
+                console.log("Matches found:", matches);
 
-              // Overlay rectangle & text
-              alt1.overLayRect([255,0,0,255], statsPos.x, statsPos.y, 150, 200, 5000, 3);
-              alt1.overLayText("Stats Found", [255,255,0,255], 20, statsPos.x, statsPos.y - 25, 5000);
+                if (matches.length > 0) {
+                    statsPos = matches[0];
+                    clearInterval(findStats);
 
-              updateOutput(`Stats window found at X: ${statsPos.x} Y: ${statsPos.y}`);
-              console.log("Stats window found:", statsPos);
-            } else {
-              updateOutput("Searching for stats window...");
+                    alt1.overLayRect([255,0,0,255], statsPos.x, statsPos.y, 150, 200, 5000, 3);
+                    alt1.overLayText("Stats Found", [255,255,0,255], 20, statsPos.x, statsPos.y - 25, 5000);
+
+                    updateOutput(`Stats window found at X: ${statsPos.x} Y: ${statsPos.y}`);
+                } else {
+                    updateOutput("Searching for stats window...");
+                }
+            } catch(err) {
+                console.error("Error during search:", err);
+                updateOutput("Error during search");
             }
-          } catch (err) {
-            console.error("Error finding stats:", err);
-            updateOutput("Error during search.");
-          }
         }, 1000);
 
-      }).catch(err => {
+    }).catch(err => {
         console.error("Error loading anchor:", err);
         updateOutput("Error loading anchor image.");
-      });
-    }
-  </script>
+    });
+}
+</script>
 </body>
 </html>
