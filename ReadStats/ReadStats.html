@@ -39,17 +39,19 @@
     }
 
     // Check Alt1 presence
-    function ensureAlt1Ready(callback) {
-      if (!window.alt1) {
-        updateStatus("Not running in Alt1 ❌", 'red');
-        alert("This app must be run inside Alt1!");
-        return false;
-      }
-      alt1.ready(() => {
-        updateStatus("Alt1 detected ✅");
-        callback();
+    function ensureAlt1Ready() {
+      return new Promise((resolve, reject) => {
+        if (!window.alt1) {
+          updateStatus("Not running in Alt1 ❌", "red");
+          alert("This app must be run inside Alt1!");
+          reject("Not in Alt1");
+          return;
+        }
+        alt1.ready(() => {
+          updateStatus("Alt1 detected ✅");
+          resolve();
+        });
       });
-      return true;
     }
 
     async function startFinder() {
