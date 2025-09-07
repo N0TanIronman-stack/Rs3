@@ -53,55 +53,57 @@
     }
 
     async function startFinder() {
-      if (!ensureAlt1Ready(() => {})) return;
-
+      try {
+        await ensureAlt1Ready(); // waits until Alt1 is ready
+      } catch(e) {
+        return; // stop if not running in Alt1
+      }
+    
       if (!alt1.permissionPixel) {
         alert("Pixel permission not granted! Check Alt1 settings.");
         return;
       }
-
+    
       updateStatus("Loading anchor image...");
       try {
         await statsReader.load();
         updateStatus("Anchor loaded ✅");
-        // Overlay anchor for debugging
-        statsReader.overLay(200, 200, 10000);
+        statsReader.overLay(200, 200, 10000); // show anchor for debugging
       } catch(err) {
         console.error(err);
-        updateStatus("Error loading anchor ❌", 'red');
+        updateStatus("Error loading anchor ❌", "red");
         return;
       }
-
+    
+      // Start searching
       let startTime = Date.now();
       updateStatus("Searching for stats window...");
-
+    
       findInterval = setInterval(async () => {
-        // Timeout check
         if (Date.now() - startTime > TIMEOUT) {
           clearInterval(findInterval);
-          updateStatus("Stats not found within timeout ❌", 'red');
+          updateStatus("Stats not found within timeout ❌", "red");
           return;
         }
-
+    
         try {
           const matches = await statsReader.find();
           console.log("Matches found:", matches);
-
+    
           if (matches.length > 0) {
             statsPos = matches[0];
             clearInterval(findInterval);
-
-            // Overlay match
-            showOverlay({x: statsPos.x, y: statsPos.y, width: 150, height: 200}, [0,255,0,128], 5000);
+    
+            alt1.overLayRect([0,255,0,128], statsPos.x, statsPos.y, 150, 200, 5000, 2);
             alt1.overLayText("Stats Found!", [255,255,0,255], 20, statsPos.x, statsPos.y - 25, 5000);
-
+    
             updateStatus(`Stats window found at X: ${statsPos.x} Y: ${statsPos.y} ✅`);
           } else {
             updateStatus("Searching for stats window...");
           }
         } catch(err) {
           console.error(err);
-          updateStatus("Error during search ❌", 'red');
+          updateStatus("Error during search ❌", "red");
         }
       }, 1000);
     }
