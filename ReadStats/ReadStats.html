@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.3</title>
+  <title>RS3 Stats Detector v1.4</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
     #status { margin-top: 10px; font-weight: bold; color: lime; }
+    #debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
     #version { margin-top: 5px; font-size: 12px; color: gray; }
   </style>
 </head>
@@ -15,7 +16,8 @@
     <h2>RS3 Stats Detector</h2>
     <button onclick="startFinder()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
-    <div id="version">Build v1.3 (diagnostic)</div>
+    <div id="debug"></div>
+    <div id="version">Build v1.4 (diagnostic)</div>
   </div>
 
   <script>
@@ -24,6 +26,11 @@
       el.innerText = msg;
       el.style.color = color;
       console.log(msg);
+    }
+
+    function setDebug(msg) {
+      document.getElementById("debug").innerText = msg;
+      console.log("DEBUG:", msg);
     }
 
     a1lib.on("ready", () => {
@@ -45,52 +52,80 @@
         return;
       }
 
-      const screenW = alt1.rsWidth || 800;
-      const screenH = alt1.rsHeight || 600;
+      // Grab screen size
+      const screenW = alt1.rsWidth || 0;
+      const screenH = alt1.rsHeight || 0;
 
-      setStatus(`Screen size: ${screenW}x${screenH} — beginning scan…`);
+      setDebug(
+        `Screen size reported by Alt1: ${screenW}x${screenH}\n` +
+        `Pixel permission: ${alt1.permissionPixel}`
+      );
+
+      if (screenW === 0 || screenH === 0) {
+        setStatus("Alt1 reports 0x0 screen ❌", "red");
+        return;
+      }
+
+      setStatus("Starting scan…");
 
       const tileSize = 300;
       let x = 0, y = 0;
       let chunkCounter = 0;
+      let heartbeat = 0;
 
       function scanNextChunk() {
         chunkCounter++;
+        heartbeat++;
 
-        // Stop condition
+        setDebug(
+          `Screen size: ${screenW}x${screenH}\n` +
+          `Pixel permission: ${alt1.permissionPixel}\n` +
+          `Current chunk: #${chunkCounter} at (${x},${y})\n` +
+          `Heartbeat: ${heartbeat}`
+        );
+
         if (y >= screenH) {
           setStatus("Finished scan — no match ❌", "red");
           return;
         }
 
-        setStatus(`Scanning chunk #${chunkCounter} at (${x},${y})`);
-
         let w = Math.min(tileSize, screenW - x);
         let h = Math.min(tileSize, screenH - y);
 
-        // Debug overlay
+        // Show chunk overlay with ID
         alt1.overLayRect(
           a1lib.mixcolor(0, 255, 255),
           x, y, w, h,
           500, 1
         );
+        alt1.overLayText(
+          `#${chunkCounter}`,
+          a1lib.mixcolor(255, 255, 255),
+          14,
+          x + 10, y + 20,
+          500
+        );
 
-        // Attempt to grab pixels
-        let pixels = alt1.getPixels(x, y, w, h);
-
-        if (!pixels) {
-          setStatus(`Chunk #${chunkCounter}: getPixels() returned null ❌`, "red");
-        } else {
-          setStatus(`Chunk #${chunkCounter}: got ${pixels.length} bytes`);
+        let pixels = null;
+        try {
+          pixels = alt1.getPixels(x, y, w, h);
+        } catch (e) {
+          setDebug(`getPixels() threw error at chunk #${chunkCounter}: ${e}`);
         }
 
-        // --- Simplified color scan ---
         if (pixels) {
-          let found = false;
+          setDebug(
+            `Screen size: ${screenW}x${screenH}\n` +
+            `Pixel permission: ${alt1.permissionPixel}\n` +
+            `Current chunk: #${chunkCounter} at (${x},${y})\n` +
+            `Heartbeat: ${heartbeat}\n` +
+            `Got pixel buffer length: ${pixels.length}`
+          );
+
+          // Look for a bright red pixel
           for (let i = 0; i < pixels.length; i += 4) {
             let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-            if (r > 200 && g < 80 && b < 80) { // bright red pixel
-              found = true;
+            if (r > 200 && g < 80 && b < 80) {
               let px = (i / 4) % w;
               let py = Math.floor((i / 4) / w);
               let absX = x + px, absY = y + py;
@@ -99,10 +134,12 @@
                 absX - 5, absY - 5, 20, 20,
                 5000, 3
               );
-              setStatus(`Found red pixel at ~X:${absX}, Y:${absY} ✅`);
+              setStatus(`Found bright red pixel at ~X:${absX}, Y:${absY} ✅`);
               return;
             }
           }
+        } else {
+          setStatus(`Chunk #${chunkCounter}: getPixels() returned null ❌`, "red");
         }
 
         // Move to next chunk
@@ -112,7 +149,7 @@
           y += tileSize;
         }
 
-        setTimeout(scanNextChunk, 500); // slow so we can observe
+        setTimeout(scanNextChunk, 500);
       }
 
       scanNextChunk();
