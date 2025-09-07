@@ -74,25 +74,32 @@
 
         let pixels = alt1.getPixels(x, y, w, h);
 
+        let match = null;
+
         for (let i = 0; i < pixels.length; i += 4) {
           let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
 
-          // Red-dominant pixel detection (more tolerant)
-          if (r > 120 && r > g + 40 && r > b + 40) {
-            found = true;
+          // Look for red-dominant (heart), green-dominant (herblore), blue-dominant (prayer)
+          if ((r > 120 && r > g + 40 && r > b + 40) ||     // red
+              (g > 120 && g > r + 40 && g > b + 40) ||     // green
+              (b > 120 && b > r + 40 && b > g + 40)) {     // blue
             let px = (i / 4) % w;
             let py = Math.floor((i / 4) / w);
-
-            alt1.overLayRect(
-              a1lib.mixcolor(255, 0, 0),
-              x + px - 5, y + py - 5,
-              20, 20,
-              5000, 3
-            );
-
-            setStatus(`Stats window found at ~X:${x+px}, Y:${y+py}`);
-            return; // stop scanning
+            match = {x: x + px, y: y + py};
+            break;
           }
+        }
+
+        if (match) {
+          found = true;
+          alt1.overLayRect(
+            a1lib.mixcolor(255, 0, 0),
+            match.x - 5, match.y - 5,
+            20, 20,
+            5000, 3
+          );
+          setStatus(`Stats window detected at ~X:${match.x}, Y:${match.y}`);
+          return; // stop scanning
         }
 
         // Move to next chunk
@@ -102,7 +109,7 @@
           y += tileSize;
         }
 
-        setTimeout(scanNextChunk, 50); // slow down so we can see progress
+        setTimeout(scanNextChunk, 50); // keep scanning
       }
 
       scanNextChunk();
