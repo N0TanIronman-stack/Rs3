@@ -10,27 +10,27 @@
   <!-- Main Border Container -->
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>Alt1 Stats Detector</h2>
-    <img src="./statanchor.png" />
-    <button onclick="detectStatsWindow()">Find Stats Window</button>
+    <button onclick="startFinder()">Start Stats Finder</button>
     <div id="output" style="margin-top:10px; font-weight:bold; color:lime;"></div>
   </div>
 
   <script>
-    // Run once when the page loads
+    let statsReader = new a1lib.ImageDetect("./statanchor.png");
+    let statsPos = null;
+    let loadingCount = 0;
+    let findStats = null;
+
     window.onload = function () {
       if (window.alt1) {
-        // Show feedback in RS client + console
         alt1.overLayText("Alt1 detected!", a1lib.mixcolor(0, 255, 0), 30, 200, 200, 3000);
-        console.log("Alt1 detected");
+        console.log("Alt1 detected ✅");
         document.getElementById("output").innerText = "Alt1 detected!";
-
       } else {
         alert("This app must be run inside the Alt1 client!");
       }
     }
 
-    // Detect the stats window
-    function detectStatsWindow() {
+    function startFinder() {
       if (!window.alt1) {
         alert("Not running in Alt1!");
         return;
@@ -41,32 +41,42 @@
         return;
       }
 
-      // Load the anchor image (make sure statanchor.png is in your project folder)
-      let statWindowAnchor = new a1lib.ImageDetect("./statanchor.png");
+      // Reset if rerun
+      statsPos = null;
+      loadingCount = 0;
+      if (findStats) clearInterval(findStats);
 
-      // Bind the entire RS client area
-      let id = alt1.bindRegion(alt1.rsX, alt1.rsY, alt1.rsWidth, alt1.rsHeight);
+      // Start loop
+      findStats = setInterval(function () {
+        if (statsPos === null) {
+          try {
+            let dots = ".".repeat((loadingCount % 3) + 1);
+            document.getElementById("output").innerText = "Looking for stats window" + dots;
+            loadingCount++;
 
-      // Try to locate the anchor
-      statWindowAnchor.findSubimage(id).then(matches => {
-        if (matches.length > 0) {
-          let m = matches[0];
-          console.log("Found stats window at:", m.x, m.y);
+            // Run search
+            statsReader.find().then(matches => {
+              if (matches.length > 0) {
+                statsPos = matches[0];
+                clearInterval(findStats);
 
-          // Overlay a rectangle around the found window
-          alt1.overLayRect(a1lib.mixcolor(255, 0, 0), m.x, m.y, 150, 200, 5000, 3);
+                // Overlay rectangle + label
+                alt1.overLayRect(a1lib.mixcolor(255, 0, 0), statsPos.x, statsPos.y, 150, 200, 5000, 3);
+                alt1.overLayText("Stats Found", a1lib.mixcolor(255, 255, 0), 20, statsPos.x, statsPos.y - 25, 5000);
 
-          // Overlay label
-          alt1.overLayText("Stats Window Found", a1lib.mixcolor(255, 255, 0), 20, m.x, m.y - 25, 5000);
+                document.getElementById("output").innerText =
+                  "Stats window found at X: " + statsPos.x + " Y: " + statsPos.y;
+                console.log("Stats window found:", statsPos);
+              }
+            });
 
-          // Update output div
-          document.getElementById("output").innerText =
-            "Found stats window at X: " + m.x + " Y: " + m.y;
-        } else {
-          console.log("Stats window not found.");
-          document.getElementById("output").innerText = "Stats window not found.";
+          } catch (e) {
+            document.getElementById("output").innerText = "Error: " + e.message;
+            console.log("Error:", e.message);
+            clearInterval(findStats);
+          }
         }
-      });
+      }, 500);
     }
   </script>
 </body>
