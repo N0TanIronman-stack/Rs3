@@ -2,73 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Rs3 Stats Detector</title>
-  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
+  <title>Alt1 Debug</title>
   <script src="https://runeapps.org/alt1lib.js"></script>
 </head>
-<body class="nis">
-  <!-- Main Border Container -->
-  <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
-    <h2>Alt1 Stats Detector</h2>
-    <button onclick="startFinder()">Start Stats Finder</button>
-    <div id="output" style="margin-top:10px; font-weight:bold; color:lime;"></div>
-  </div>
+<body>
+  <h2>Alt1 Debug Test</h2>
+  <div id="output" style="font-weight:bold; color:lime;"></div>
 
   <script>
-    let statsReader = new a1lib.ImageDetect("./statanchor.png");
-    let statsPos = null;
-    let findStats = null;
+    // Step 1: check if alt1lib.js loaded at all
+    console.log("Script loaded, window.alt1 =", window.alt1);
 
-    // Ensure Alt1 is ready before we do anything
-    a1lib.on("ready", () => {
-      if (window.alt1) {
-        alt1.overLayText("Alt1 detected!", a1lib.mixcolor(0, 255, 0), 30, 200, 200, 3000);
-        console.log("Alt1 detected ✅");
-        document.getElementById("output").innerText = "Alt1 detected!";
-      } else {
-        alert("This app must be run inside the Alt1 client!");
-      }
-    });
-
-    function startFinder() {
-      if (!window.alt1) {
-        alert("Not running in Alt1!");
-        return;
-      }
-
-      if (!alt1.permissionPixel) {
-        alert("Pixel permission not granted! Check Alt1 settings.");
-        return;
-      }
-
-      statsReader.load().then(() => {
-        console.log("Anchor loaded, w:", statsReader.img.width, "h:", statsReader.img.height);
-        document.getElementById("output").innerText = "Anchor image loaded. Searching...";
-
-        // For debugging: overlay the anchor image on screen at (200,200) so you can see it
-        statsReader.overLay(200, 200, 5000);
-
-        findStats = setInterval(function () {
-          statsReader.find().then(matches => {
-            if (matches.length > 0) {
-              statsPos = matches[0];
-              clearInterval(findStats);
-
-              alt1.overLayRect(a1lib.mixcolor(255, 0, 0), statsPos.x, statsPos.y, 150, 200, 5000, 3);
-              alt1.overLayText("Stats Found", a1lib.mixcolor(255, 255, 0), 20, statsPos.x, statsPos.y - 25, 5000);
-
-              document.getElementById("output").innerText =
-                "Stats window found at X: " + statsPos.x + " Y: " + statsPos.y;
-              console.log("Stats window found:", statsPos);
-            } else {
-              document.getElementById("output").innerText = "Searching for stats window...";
-            }
-          });
-        }, 1000);
-      }).catch(err => {
-        console.error("Error loading anchor:", err);
-        document.getElementById("output").innerText = "Error loading anchor image.";
+    // Step 2: try event hook
+    if (window.a1lib && a1lib.on) {
+      a1lib.on("ready", () => {
+        console.log("a1lib ready event fired!");
+        if (window.alt1) {
+          alt1.overLayText("Alt1 detected!", a1lib.mixcolor(0, 255, 0), 30, 200, 200, 3000);
+          document.getElementById("output").innerText = "Alt1 detected ✅";
+        } else {
+          document.getElementById("output").innerText = "Alt1lib ready, but no alt1 found";
+        }
       });
+    } else {
+      console.log("a1lib not present at all");
+      document.getElementById("output").innerText = "Not running in Alt1";
     }
   </script>
 </body>
