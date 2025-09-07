@@ -53,39 +53,59 @@
       const screenH = alt1.rsHeight;
       const tileSize = 300;
 
+      let x = 0, y = 0;
       let found = false;
 
-      outer: for (let x = 0; x < screenW; x += tileSize) {
-        for (let y = 0; y < screenH; y += tileSize) {
-          let w = Math.min(tileSize, screenW - x);
-          let h = Math.min(tileSize, screenH - y);
+      function scanNextChunk() {
+        if (y >= screenH) {
+          if (!found) setStatus("Stats window not found ❌", "red");
+          return;
+        }
 
-          let pixels = alt1.getPixels(x, y, w, h);
+        let w = Math.min(tileSize, screenW - x);
+        let h = Math.min(tileSize, screenH - y);
 
-          for (let i = 0; i < pixels.length; i += 4) {
-            let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-            if (r > 180 && g < 80 && b < 80) {
-              found = true;
-              let px = (i / 4) % w;
-              let py = Math.floor((i / 4) / w);
+        // Debug overlay for current chunk
+        alt1.overLayRect(
+          a1lib.mixcolor(0, 255, 255),
+          x, y, w, h,
+          500, 1
+        );
 
-              alt1.overLayRect(
-                a1lib.mixcolor(255, 0, 0),
-                x + px - 5, y + py - 5,
-                20, 20,
-                5000, 3
-              );
+        let pixels = alt1.getPixels(x, y, w, h);
 
-              setStatus(`Stats window found at ~X:${x+px}, Y:${y+py}`);
-              break outer;
-            }
+        for (let i = 0; i < pixels.length; i += 4) {
+          let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+
+          // Red-dominant pixel detection (more tolerant)
+          if (r > 120 && r > g + 40 && r > b + 40) {
+            found = true;
+            let px = (i / 4) % w;
+            let py = Math.floor((i / 4) / w);
+
+            alt1.overLayRect(
+              a1lib.mixcolor(255, 0, 0),
+              x + px - 5, y + py - 5,
+              20, 20,
+              5000, 3
+            );
+
+            setStatus(`Stats window found at ~X:${x+px}, Y:${y+py}`);
+            return; // stop scanning
           }
         }
+
+        // Move to next chunk
+        x += tileSize;
+        if (x >= screenW) {
+          x = 0;
+          y += tileSize;
+        }
+
+        setTimeout(scanNextChunk, 50); // slow down so we can see progress
       }
 
-      if (!found) {
-        setStatus("Stats window not found ❌", "red");
-      }
+      scanNextChunk();
     }
   </script>
 </body>
