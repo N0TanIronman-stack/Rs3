@@ -1,0 +1,15 @@
+{
+  "appname": "Read Stats",
+  "description": "A tool to read the user's stats; Used for other apps",
+  "appurl": "ReadStats.html",
+  "iconUrl": "./Skill_Icon.png",
+  "defaultWidth": 283,
+  "defaultHeight": 283,
+  "minWidth":283,
+  "minHeight":283,
+  "maxWidth":283,
+  "maxHeight":263,
+  "requestHandlers": [],
+  "activators": [],
+  "permissions": "pixel,gamestate,overlay"
+}
