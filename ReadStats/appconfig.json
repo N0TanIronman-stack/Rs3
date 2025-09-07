@@ -2,7 +2,7 @@
   "appname": "Read Stats",
   "description": "A tool to read the user's stats; Used for other apps",
   "appurl": "ReadStats.html",
-  "iconUrl": "./Skill_Icon.png",
+  "iconUrl": "./Skills_icon.png",
   "defaultWidth": 283,
   "defaultHeight": 283,
   "minWidth":283,
