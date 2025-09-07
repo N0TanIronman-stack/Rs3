@@ -2,68 +2,71 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Rs3 default example</title>
+  <title>Rs3 Stats Detector</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
 </head>
 <body class="nis">
-
   <!-- Main Border Container -->
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
-
-    
-
+    <h2>Alt1 Stats Detector</h2>
+    <button onclick="detectStatsWindow()">Find Stats Window</button>
+    <div id="output" style="margin-top:10px; font-weight:bold; color:lime;"></div>
   </div>
-</body>
-  <!-- Is it in Alt1 -->
-  <script>
-    if (!window.alt1) {
-      //alert("This app must be run inside Alt1 client!");
-    }
-    else if (window.alt1){
-      alert("Alt1 Found");
-    }
-  </script>
-  
-  <!-- Detect Skills Window -->
-  <script>
-    let statWindowAnchor = new a1lib.ImageDetect("./statanchor.png");
-    
-    let id = alt1.bindRegion(alt1.rsX, alt1.rsY, alt1.rsWidth, alt1.rsHeight);
 
-    // statWindowAnchor.findSubimage searches the bound region
-    statWindowAnchor.findSubimage(id).then(matches => {
-      if (matches.length > 0) {
-        let m = matches[0]; // use the first match
-        console.log("Found stats window at:", m.x, m.y);
+  <script>
+    // Run once when the page loads
+    window.onload = function () {
+      if (window.alt1) {
+        // Show feedback in RS client + console
+        alt1.overLayText("Alt1 detected!", a1lib.mixcolor(0, 255, 0), 30, 200, 200, 3000);
+        console.log("Alt1 detected ✅");
+        document.getElementById("output").innerText = "Alt1 detected!";
 
-        // Now you can OCR relative to this anchor
-        let text = alt1.bindReadString(id, "xpcounter", m.x + 50, m.y + 100);
-        document.getElementById("output").innerText = text;
       } else {
-        console.log("Stats window not found!");
+        alert("This app must be run inside the Alt1 client!");
       }
-    });
-  </script>
-  
-  <!-- Read User's Stats -->
-  <script>
-    function readStats() {
-      if (!alt1.permissionPixel) {
-        alert("Pixel permission not granted!");
+    }
+
+    // Detect the stats window
+    function detectStatsWindow() {
+      if (!window.alt1) {
+        alert("Not running in Alt1!");
         return;
       }
-        
 
-      // Example: bind a region (x, y, width, height)
-      // You’ll need to find the coordinates for where stats are drawn on screen
-      let id = alt1.bindRegion(100, 100, 200, 50);
+      if (!alt1.permissionPixel) {
+        alert("Pixel permission not granted! Check Alt1 settings.");
+        return;
+      }
 
-      // Try to OCR using the 'xpcounter' or 'chat' font
-      let text = alt1.bindReadString(id, "xpcounter", 10, 20);
-      console.log("Read text:", text);
+      // Load the anchor image (make sure statanchor.png is in your project folder)
+      let statWindowAnchor = new a1lib.ImageDetect("./statanchor.png");
 
-      document.getElementById("output").innerText = text || "Nothing detected";
+      // Bind the entire RS client area
+      let id = alt1.bindRegion(alt1.rsX, alt1.rsY, alt1.rsWidth, alt1.rsHeight);
+
+      // Try to locate the anchor
+      statWindowAnchor.findSubimage(id).then(matches => {
+        if (matches.length > 0) {
+          let m = matches[0];
+          console.log("Found stats window at:", m.x, m.y);
+
+          // Overlay a rectangle around the found window
+          alt1.overLayRect(a1lib.mixcolor(255, 0, 0), m.x, m.y, 150, 200, 5000, 3);
+
+          // Overlay label
+          alt1.overLayText("Stats Window Found", a1lib.mixcolor(255, 255, 0), 20, m.x, m.y - 25, 5000);
+
+          // Update output div
+          document.getElementById("output").innerText =
+            "Found stats window at X: " + m.x + " Y: " + m.y;
+        } else {
+          console.log("Stats window not found.");
+          document.getElementById("output").innerText = "Stats window not found.";
+        }
+      });
     }
-   </script>
+  </script>
+</body>
 </html>
