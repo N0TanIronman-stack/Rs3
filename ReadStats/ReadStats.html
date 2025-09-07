@@ -2,38 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Alt1 Debug</title>
+  <title>Rs3 Stats Detector</title>
+  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
 </head>
-<body>
-  <h2>Alt1 Debug Test</h2>
-  <div id="output" style="font-weight:bold; color:lime;"></div>
+<body class="nis">
+  <!-- Main Border Container -->
+  <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
+    <h2>Alt1 Stats Detector</h2>
+    <button onclick="startFinder()">Start Stats Finder</button>
+    <div id="output" style="margin-top:10px; font-weight:bold; color:lime;"></div>
+  </div>
 
   <script>
+    let statsReader = new a1lib.ImageDetect("./statanchor.png");
+    let statsPos = null;
+    let findStats = null;
+
     function updateOutput(msg) {
       console.log(msg);
       document.getElementById("output").innerText = msg;
     }
 
-    // Check if Alt1 is present immediately
+    // Ensure Alt1 is ready
     if (window.alt1) {
-      updateOutput("Alt1 detected immediately ✅");
-      alt1.overLayText("Alt1 detected!", [0,255,0,255], 30, 200, 200, 3000);
+      alt1.ready(() => {
+        updateOutput("Alt1 detected ✅");
+        // Overlay text to indicate Alt1 is ready
+        alt1.overLayText("Alt1 detected!", [0,255,0,255], 30, 200, 200, 3000);
+      });
     } else {
-      updateOutput("Alt1 not detected yet, waiting for ready event...");
+      updateOutput("Not running in Alt1 ❌");
+      alert("This app must be run inside the Alt1 client!");
+    }
 
-      // Fallback using alt1.ready
-      if (window.alt1) {
-        alt1.ready(() => {
-          updateOutput("Alt1 ready event fired ✅");
-          alt1.overLayText("Alt1 ready!", [0,255,0,255], 30, 200, 200, 3000);
-        });
-      } else {
-        // In case Alt1 never loads (e.g., opened in browser)
-        setTimeout(() => {
-          if (!window.alt1) updateOutput("Not running in Alt1 ❌");
-        }, 3000);
+    function startFinder() {
+      if (!window.alt1) {
+        alert("Not running in Alt1!");
+        return;
       }
+
+      if (!alt1.permissionPixel) {
+        alert("Pixel permission not granted! Check Alt1 settings.");
+        return;
+      }
+
+      statsReader.load().then(() => {
+        updateOutput("Anchor image loaded. Searching...");
+
+        // Overlay the anchor image on screen for debugging
+        statsReader.overLay(200, 200, 5000);
+
+        findStats = setInterval(async function () {
+          try {
+            const matches = await statsReader.find();
+            if (matches.length > 0) {
+              statsPos = matches[0];
+              clearInterval(findStats);
+
+              // Overlay rectangle & text
+              alt1.overLayRect([255,0,0,255], statsPos.x, statsPos.y, 150, 200, 5000, 3);
+              alt1.overLayText("Stats Found", [255,255,0,255], 20, statsPos.x, statsPos.y - 25, 5000);
+
+              updateOutput(`Stats window found at X: ${statsPos.x} Y: ${statsPos.y}`);
+              console.log("Stats window found:", statsPos);
+            } else {
+              updateOutput("Searching for stats window...");
+            }
+          } catch (err) {
+            console.error("Error finding stats:", err);
+            updateOutput("Error during search.");
+          }
+        }, 1000);
+
+      }).catch(err => {
+        console.error("Error loading anchor:", err);
+        updateOutput("Error loading anchor image.");
+      });
     }
   </script>
 </body>
