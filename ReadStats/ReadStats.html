@@ -39,9 +39,14 @@
       if (window.alt1) {
         setStatus("Alt1 detected ✅");
         alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
-
-        // Initialize capture object
-        capture = new a1lib.ImageCapture();
+    
+        try {
+          capture = new a1lib.ImageCapture();
+          setDebug("ImageCapture initialized successfully ✅");
+        } catch (e) {
+          setStatus("Failed to init ImageCapture ❌", "red");
+          setDebug("Error: " + e);
+        }
       } else {
         setStatus("Not running in Alt1 ❌", "red");
       }
