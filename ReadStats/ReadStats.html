@@ -2,67 +2,109 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Rs3 Stats Detector</title>
+  <title>RS3 Stats Detector</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
+  <style>
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+      color: lime;
+    }
+    button { margin-top: 10px; }
+  </style>
 </head>
 <body class="nis">
-  <!-- Main Border Container -->
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
-    <h2>Alt1 Stats Detector</h2>
+    <h2>RS3 Stats Detector</h2>
     <button onclick="startFinder()">Start Stats Finder</button>
-    <div id="output" style="margin-top:10px; font-weight:bold; color:lime;"></div>
-    <div><p> "Version 0.0.1" </p></div>
+    <div id="status">Status: Waiting...</div>
   </div>
 
   <script>
-let statsReader = new a1lib.ImageDetect("./statanchor.png");
-let statsPos = null;
-let findStats = null;
+    let statsReader = new a1lib.ImageDetect("./statanchor.png");
+    let findInterval = null;
+    let statsPos = null;
+    const TIMEOUT = 30000; // stop after 30s if not found
 
-function updateOutput(msg) {
-    console.log(msg);
-    document.getElementById("output").innerText = msg;
-}
+    function updateStatus(msg, color='lime') {
+      console.log(msg);
+      const statusDiv = document.getElementById("status");
+      statusDiv.innerText = "Status: " + msg;
+      statusDiv.style.color = color;
+    }
 
-function startFinder() {
-    if (!window.alt1) { alert("Not running in Alt1!"); return; }
-    if (!alt1.permissionPixel) { alert("Pixel permission not granted!"); return; }
+    function showOverlay(rect, color=[255,0,0,128], duration=3000) {
+      alt1.overLayRect(color, rect.x, rect.y, rect.width, rect.height, duration, 2);
+    }
 
-    statsReader.load().then(() => {
-        updateOutput("Anchor image loaded ✅");
-        console.log("Anchor img:", statsReader.img);
+    // Check Alt1 presence
+    function ensureAlt1Ready(callback) {
+      if (!window.alt1) {
+        updateStatus("Not running in Alt1 ❌", 'red');
+        alert("This app must be run inside Alt1!");
+        return false;
+      }
+      alt1.ready(() => {
+        updateStatus("Alt1 detected ✅");
+        callback();
+      });
+      return true;
+    }
 
-        // Overlay the anchor for reference
+    async function startFinder() {
+      if (!ensureAlt1Ready(() => {})) return;
+
+      if (!alt1.permissionPixel) {
+        alert("Pixel permission not granted! Check Alt1 settings.");
+        return;
+      }
+
+      updateStatus("Loading anchor image...");
+      try {
+        await statsReader.load();
+        updateStatus("Anchor loaded ✅");
+        // Overlay anchor for debugging
         statsReader.overLay(200, 200, 10000);
+      } catch(err) {
+        console.error(err);
+        updateStatus("Error loading anchor ❌", 'red');
+        return;
+      }
 
-        findStats = setInterval(async function () {
-            try {
-                const matches = await statsReader.find();
-                console.log("Matches found:", matches);
+      let startTime = Date.now();
+      updateStatus("Searching for stats window...");
 
-                if (matches.length > 0) {
-                    statsPos = matches[0];
-                    clearInterval(findStats);
+      findInterval = setInterval(async () => {
+        // Timeout check
+        if (Date.now() - startTime > TIMEOUT) {
+          clearInterval(findInterval);
+          updateStatus("Stats not found within timeout ❌", 'red');
+          return;
+        }
 
-                    alt1.overLayRect([255,0,0,255], statsPos.x, statsPos.y, 150, 200, 5000, 3);
-                    alt1.overLayText("Stats Found", [255,255,0,255], 20, statsPos.x, statsPos.y - 25, 5000);
+        try {
+          const matches = await statsReader.find();
+          console.log("Matches found:", matches);
 
-                    updateOutput(`Stats window found at X: ${statsPos.x} Y: ${statsPos.y}`);
-                } else {
-                    updateOutput("Searching for stats window...");
-                }
-            } catch(err) {
-                console.error("Error during search:", err);
-                updateOutput("Error during search");
-            }
-        }, 1000);
+          if (matches.length > 0) {
+            statsPos = matches[0];
+            clearInterval(findInterval);
 
-    }).catch(err => {
-        console.error("Error loading anchor:", err);
-        updateOutput("Error loading anchor image.");
-    });
-}
-</script>
+            // Overlay match
+            showOverlay({x: statsPos.x, y: statsPos.y, width: 150, height: 200}, [0,255,0,128], 5000);
+            alt1.overLayText("Stats Found!", [255,255,0,255], 20, statsPos.x, statsPos.y - 25, 5000);
+
+            updateStatus(`Stats window found at X: ${statsPos.x} Y: ${statsPos.y} ✅`);
+          } else {
+            updateStatus("Searching for stats window...");
+          }
+        } catch(err) {
+          console.error(err);
+          updateStatus("Error during search ❌", 'red');
+        }
+      }, 1000);
+    }
+  </script>
 </body>
 </html>
