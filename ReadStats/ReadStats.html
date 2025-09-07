@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector</title>
+  <title>RS3 Stats Detector v1.2</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
@@ -11,6 +11,11 @@
       font-weight: bold;
       color: lime;
     }
+    #version {
+      margin-top: 5px;
+      font-size: 12px;
+      color: gray;
+    }
   </style>
 </head>
 <body class="nis">
@@ -18,6 +23,7 @@
     <h2>RS3 Stats Detector</h2>
     <button onclick="startFinder()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
+    <div id="version">Build v1.2</div>
   </div>
 
   <script>
@@ -47,20 +53,28 @@
         return;
       }
 
-      setStatus("Scanning screen…");
+      // fallback screen size
+      const screenW = alt1.rsWidth || 800;
+      const screenH = alt1.rsHeight || 600;
+      setStatus(`Scanning screen (${screenW}x${screenH})…`);
 
-      const screenW = alt1.rsWidth;
-      const screenH = alt1.rsHeight;
       const tileSize = 300;
-
       let x = 0, y = 0;
       let found = false;
+      let chunkCounter = 0;
 
       function scanNextChunk() {
+        // stop if already found
+        if (found) return;
+
+        // stop when past screen
         if (y >= screenH) {
           if (!found) setStatus("Stats window not found ❌", "red");
           return;
         }
+
+        chunkCounter++;
+        setStatus(`Scanning chunk #${chunkCounter} at (${x},${y})`);
 
         let w = Math.min(tileSize, screenW - x);
         let h = Math.min(tileSize, screenH - y);
@@ -73,16 +87,19 @@
         );
 
         let pixels = alt1.getPixels(x, y, w, h);
+        if (!pixels) {
+          setStatus("getPixels() returned null ❌", "red");
+          return;
+        }
 
         let match = null;
 
         for (let i = 0; i < pixels.length; i += 4) {
           let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
 
-          // Look for red-dominant (heart), green-dominant (herblore), blue-dominant (prayer)
-          if ((r > 120 && r > g + 40 && r > b + 40) ||     // red
-              (g > 120 && g > r + 40 && g > b + 40) ||     // green
-              (b > 120 && b > r + 40 && b > g + 40)) {     // blue
+          if ((r > 120 && r > g + 40 && r > b + 40) ||     // red heart
+              (g > 120 && g > r + 40 && g > b + 40) ||     // green herb
+              (b > 120 && b > r + 40 && b > g + 40)) {     // blue prayer
             let px = (i / 4) % w;
             let py = Math.floor((i / 4) / w);
             match = {x: x + px, y: y + py};
@@ -99,17 +116,17 @@
             5000, 3
           );
           setStatus(`Stats window detected at ~X:${match.x}, Y:${match.y}`);
-          return; // stop scanning
+          return;
         }
 
-        // Move to next chunk
+        // move to next chunk
         x += tileSize;
         if (x >= screenW) {
           x = 0;
           y += tileSize;
         }
 
-        setTimeout(scanNextChunk, 50); // keep scanning
+        setTimeout(scanNextChunk, 200); // slower so you can see it stepping
       }
 
       scanNextChunk();
