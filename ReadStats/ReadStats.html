@@ -10,6 +10,7 @@
   <!-- Main Border Container -->
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>Alt1 Stats Detector</h2>
+    <img src="./statanchor.png"
     <button onclick="detectStatsWindow()">Find Stats Window</button>
     <div id="output" style="margin-top:10px; font-weight:bold; color:lime;"></div>
   </div>
@@ -20,7 +21,7 @@
       if (window.alt1) {
         // Show feedback in RS client + console
         alt1.overLayText("Alt1 detected!", a1lib.mixcolor(0, 255, 0), 30, 200, 200, 3000);
-        console.log("Alt1 detected ✅");
+        console.log("Alt1 detected");
         document.getElementById("output").innerText = "Alt1 detected!";
 
       } else {
