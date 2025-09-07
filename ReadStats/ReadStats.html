@@ -28,7 +28,6 @@
       console.log(msg);
     }
 
-    // Confirm Alt1
     a1lib.on("ready", () => {
       if (window.alt1) {
         setStatus("Alt1 detected ✅");
@@ -48,38 +47,44 @@
         return;
       }
 
-      setStatus("Scanning screen for stats window…");
+      setStatus("Scanning screen…");
 
-      // Example: scan a fixed region (adjust these numbers as needed)
-      let regionX = 1000, regionY = 100, regionW = 300, regionH = 500;
-      let pixels = alt1.getPixels(regionX, regionY, regionW, regionH);
+      const screenW = alt1.rsWidth;
+      const screenH = alt1.rsHeight;
+      const tileSize = 300;
 
       let found = false;
 
-      // Scan for a strong red pixel (Hitpoints heart)
-      setStatus("Looking for Heart Icon");
-      for (let i = 0; i < pixels.length; i += 4) {
-        let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-        if (r > 180 && g < 80 && b < 80) {
-          found = true;
-          setStatus("Heart Found");
-          let px = (i / 4) % regionW;
-          let py = Math.floor((i / 4) / regionW);
+      outer: for (let x = 0; x < screenW; x += tileSize) {
+        for (let y = 0; y < screenH; y += tileSize) {
+          let w = Math.min(tileSize, screenW - x);
+          let h = Math.min(tileSize, screenH - y);
 
-          // Overlay box where found
-          alt1.overLayRect(
-            a1lib.mixcolor(255, 0, 0),
-            regionX + px - 5, regionY + py - 5,
-            20, 20,
-            5000, 3
-          );
-          setStatus(`Stats window detected at ~X:${regionX+px}, Y:${regionY+py}`);
-          break;
+          let pixels = alt1.getPixels(x, y, w, h);
+
+          for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+            if (r > 180 && g < 80 && b < 80) {
+              found = true;
+              let px = (i / 4) % w;
+              let py = Math.floor((i / 4) / w);
+
+              alt1.overLayRect(
+                a1lib.mixcolor(255, 0, 0),
+                x + px - 5, y + py - 5,
+                20, 20,
+                5000, 3
+              );
+
+              setStatus(`Stats window found at ~X:${x+px}, Y:${y+py}`);
+              break outer;
+            }
+          }
         }
       }
 
       if (!found) {
-        setStatus("Could not detect stats window ❌", "red");
+        setStatus("Stats window not found ❌", "red");
       }
     }
   </script>
