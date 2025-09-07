@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.5</title>
+  <title>RS3 Stats Detector v1.6</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
@@ -17,10 +17,12 @@
     <button onclick="startFinder()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.5 (fixed pixel capture)</div>
+    <div id="version">Build v1.6 (ImageCapture API)</div>
   </div>
 
   <script>
+    let capture = null;
+
     function setStatus(msg, color = "lime") {
       const el = document.getElementById("status");
       el.innerText = msg;
@@ -37,6 +39,9 @@
       if (window.alt1) {
         setStatus("Alt1 detected ✅");
         alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
+
+        // Initialize capture object
+        capture = new a1lib.ImageCapture();
       } else {
         setStatus("Not running in Alt1 ❌", "red");
       }
@@ -64,50 +69,44 @@
         setStatus("Alt1 reports 0x0 screen ❌", "red");
         return;
       }
+      if (!capture) {
+        setStatus("Capture not initialized ❌", "red");
+        return;
+      }
 
       setStatus("Starting scan…");
 
       const tileSize = 300;
       let x = 0, y = 0;
       let chunkCounter = 0;
-      let heartbeat = 0;
 
       function scanNextChunk() {
         chunkCounter++;
-        heartbeat++;
 
         if (y >= screenH) {
           setStatus("Finished scan — no match ❌", "red");
           return;
         }
 
-        setDebug(
-          `Screen size: ${screenW}x${screenH}\n` +
-          `Pixel permission: ${alt1.permissionPixel}\n` +
-          `Current chunk: #${chunkCounter} at (${x},${y})\n` +
-          `Heartbeat: ${heartbeat}`
-        );
-
         let w = Math.min(tileSize, screenW - x);
         let h = Math.min(tileSize, screenH - y);
 
-        // Overlay rectangle for the current chunk
+        // Overlay rectangle for current chunk
         alt1.overLayRect(a1lib.mixcolor(0, 255, 255), x, y, w, h, 500, 1);
         alt1.overLayText(`#${chunkCounter}`, a1lib.mixcolor(255, 255, 255), 14, x + 10, y + 20, 500);
 
         try {
-          let img = a1lib.capture(x, y, w, h);
+          let img = capture.capture(x, y, w, h);
           let pixels = img.toData();
 
           setDebug(
             `Screen size: ${screenW}x${screenH}\n` +
             `Pixel permission: ${alt1.permissionPixel}\n` +
             `Current chunk: #${chunkCounter} at (${x},${y})\n` +
-            `Heartbeat: ${heartbeat}\n` +
-            `Got pixel buffer length: ${pixels.length}`
+            `Buffer length: ${pixels.length}`
           );
 
-          // Look for bright red pixel (heart icon)
+          // Look for bright red pixel
           for (let i = 0; i < pixels.length; i += 4) {
             let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
             if (r > 200 && g < 80 && b < 80) {
@@ -115,7 +114,7 @@
               let py = Math.floor((i / 4) / w);
               let absX = x + px, absY = y + py;
               alt1.overLayRect(a1lib.mixcolor(255, 0, 0), absX - 5, absY - 5, 20, 20, 5000, 3);
-              setStatus(`Found bright red pixel at ~X:${absX}, Y:${absY} ✅`);
+              setStatus(`Found red pixel at ~X:${absX}, Y:${absY} ✅`);
               return;
             }
           }
