@@ -18,11 +18,32 @@
   <!-- Is it in Alt1 -->
   <script>
     if (!window.alt1) {
-      alert("This app must be run inside Alt1 client!");
+      //alert("This app must be run inside Alt1 client!");
     }
     else if (window.alt1){
       alert("Alt1 Found");
     }
+  </script>
+  
+  <!-- Detect Skills Window -->
+  <script>
+    let statWindowAnchor = new a1lib.ImageDetect("./statanchor.png");
+    
+    let id = alt1.bindRegion(alt1.rsX, alt1.rsY, alt1.rsWidth, alt1.rsHeight);
+
+    // statWindowAnchor.findSubimage searches the bound region
+    statWindowAnchor.findSubimage(id).then(matches => {
+      if (matches.length > 0) {
+        let m = matches[0]; // use the first match
+        console.log("Found stats window at:", m.x, m.y);
+
+        // Now you can OCR relative to this anchor
+        let text = alt1.bindReadString(id, "xpcounter", m.x + 50, m.y + 100);
+        document.getElementById("output").innerText = text;
+      } else {
+        console.log("Stats window not found!");
+      }
+    });
   </script>
   
   <!-- Read User's Stats -->
