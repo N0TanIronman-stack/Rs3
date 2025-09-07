@@ -57,10 +57,12 @@
       let found = false;
 
       // Scan for a strong red pixel (Hitpoints heart)
+      setStatus("Looking for Heart Icon");
       for (let i = 0; i < pixels.length; i += 4) {
         let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
         if (r > 180 && g < 80 && b < 80) {
           found = true;
+          setStatus("Heart Found");
           let px = (i / 4) % regionW;
           let py = Math.floor((i / 4) / regionW);
 
