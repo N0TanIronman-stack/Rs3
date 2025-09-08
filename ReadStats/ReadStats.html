@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.8</title>
+  <title>RS3 Stats Detector v1.9</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
@@ -17,7 +17,7 @@
     <button id="startBtn" disabled onclick="startFinder()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.8 (ImageCapture API)</div>
+    <div id="version">Build v1.9 (ImageCapture API)</div>
   </div>
 
   <script>
@@ -36,18 +36,23 @@
       console.log("DEBUG:", msg);
     }
 
-    a1lib.on("ready", () => {
-        if (window.alt1) {
-            capture = alt1.capture;
-            alt1Ready = true;
-            setStatus("Alt1 detected ✅");
-    
-            // Enable the button now
-            document.getElementById("startBtn").disabled = false;
-        } else {
+    let capture = null;
+
+    async function initAlt1() {
+        if (!window.alt1) {
             setStatus("Not running in Alt1 ❌", "red");
+            return false;
         }
-    });
+    
+        // Wait for Alt1 to be ready
+        await alt1.ready();
+    
+        capture = alt1.capture; // Initialize capture
+        setStatus("Alt1 detected ✅");
+        document.getElementById("startBtn").disabled = false;
+    
+        return true;
+    }
 
     console.log("Alt1 ready:", alt1Ready);
     console.log("Capture object:", capture);
