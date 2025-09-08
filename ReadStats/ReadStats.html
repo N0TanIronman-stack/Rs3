@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>RS3 Stats Detector v1.6</title>
-  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
-  <script src="https://runeapps.org/alt1lib.js"></script>
+  https://runeapps.org/nis/nis.css
+  https://runeapps.org/alt1lib.js
   <style>
     #status { margin-top: 10px; font-weight: bold; color: lime; }
     #debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
@@ -36,19 +37,24 @@
     }
 
     a1lib.on("ready", () => {
-      if (window.alt1) {
+      if (window.alt1 && a1lib.ImageCapture) {
         setStatus("Alt1 detected ✅");
         alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
-    
-        try {
-          capture = new a1lib.ImageCapture();
-          setDebug("ImageCapture initialized successfully ✅");
-        } catch (e) {
-          setStatus("Failed to init ImageCapture ❌", "red");
-          setDebug("Error: " + e);
-        }
+
+        // Delay initialization slightly
+        setTimeout(() => {
+          try {
+            capture = new a1lib.ImageCapture();
+            console.log("Capture object:", capture);
+            setDebug("ImageCapture initialized successfully ✅");
+          } catch (e) {
+            setStatus("Failed to init ImageCapture ❌", "red");
+            setDebug("Error initializing ImageCapture: " + e.message);
+          }
+        }, 500);
       } else {
-        setStatus("Not running in Alt1 ❌", "red");
+        setStatus("Alt1 or ImageCapture not available ❌", "red");
+        setDebug("Alt1: " + !!window.alt1 + ", ImageCapture: " + !!a1lib.ImageCapture);
       }
     });
 
@@ -76,6 +82,7 @@
       }
       if (!capture) {
         setStatus("Capture not initialized ❌", "red");
+        console.log("Capture object:", capture);
         return;
       }
 
@@ -96,7 +103,6 @@
         let w = Math.min(tileSize, screenW - x);
         let h = Math.min(tileSize, screenH - y);
 
-        // Overlay rectangle for current chunk
         alt1.overLayRect(a1lib.mixcolor(0, 255, 255), x, y, w, h, 500, 1);
         alt1.overLayText(`#${chunkCounter}`, a1lib.mixcolor(255, 255, 255), 14, x + 10, y + 20, 500);
 
@@ -111,7 +117,6 @@
             `Buffer length: ${pixels.length}`
           );
 
-          // Look for bright red pixel
           for (let i = 0; i < pixels.length; i += 4) {
             let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
             if (r > 200 && g < 80 && b < 80) {
@@ -124,10 +129,9 @@
             }
           }
         } catch (e) {
-          setStatus(`Error in chunk #${chunkCounter}: ${e}`, "red");
+          setStatus(`Error in chunk #${chunkCounter}: ${e.message}`, "red");
         }
 
-        // Move to next chunk
         x += tileSize;
         if (x >= screenW) {
           x = 0;
