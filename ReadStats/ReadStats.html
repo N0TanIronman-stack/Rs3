@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.3</title>
+  <title>RS3 Stats Detector v1.1</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
@@ -18,7 +18,7 @@
     <button id="startBtn">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.3 (stat window OCR)</div>
+    <div id="version">Build v1.1 (stat window OCR)</div>
   </div>
 
   <script>
@@ -106,8 +106,7 @@
     function findEdges(anchorX, anchorY, screenImg) {
       const cw = screenImg.width, ch = screenImg.height;
       const pixels = screenImg.data;
-
-      // Helper: compare icon to pixels at given position
+    
       function matchesIconAt(x0, y0, icon) {
         const iw = icon.width, ih = icon.height, iconPixels = icon.data;
         for (let iy = 0; iy < ih; iy++) {
@@ -116,26 +115,40 @@
             const ii = 4 * (ix + iy * iw);
             const r1 = pixels[ci], g1 = pixels[ci+1], b1 = pixels[ci+2];
             const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
-            if (Math.abs(r1 - r2) > 30 || Math.abs(g1 - g2) > 30 || Math.abs(b1 - b2) > 30) return false;
+            if (Math.abs(r1 - r2) > 30 || Math.abs(g1 - g2) > 30 || Math.abs(b1 - b2) > 30)
+              return false;
           }
         }
         return true;
       }
-
+    
+      let maxScan = 50; // scan at most 50px to left/right/up
+    
+      // Left edge
       let leftX = anchorX;
-      while (leftX > 0 && matchesIconAt(leftX - 1, anchorY, statBorderData)) leftX--;
-
-      let rightX = anchorX;
-      while (rightX < cw - statBorderData.width && matchesIconAt(rightX + 1, anchorY, statBorderData)) rightX++;
-
+      for (let dx = 1; dx <= maxScan; dx++) {
+        if (matchesIconAt(anchorX - dx, anchorY, statBorderData)) leftX = anchorX - dx;
+        else break;
+      }
+    
+      // Right edge
+      let rightX = anchorX + statAnchorData.width;
+      for (let dx = 1; dx <= maxScan; dx++) {
+        if (matchesIconAt(anchorX + statAnchorData.width + dx, anchorY, statBorderData)) rightX = anchorX + statAnchorData.width + dx;
+        else break;
+      }
+    
+      // Top edge
       let topY = anchorY;
-      while (topY > 0 && matchesIconAt(anchorX, topY - 1, statRoofData)) topY--;
-
-      let bottomY = topY + statAnchorData.height + 10; // rough estimate, can refine
-
-      return {x: leftX, y: topY, w: rightX - leftX + statBorderData.width, h: bottomY - topY};
+      for (let dy = 1; dy <= maxScan; dy++) {
+        if (matchesIconAt(anchorX, anchorY - dy, statRoofData)) topY = anchorY - dy;
+        else break;
+      }
+    
+      let bottomY = anchorY + statAnchorData.height + 10; // we can refine later
+    
+      return {x: leftX, y: topY, w: rightX - leftX, h: bottomY - topY};
     }
-
     // ----------------- OCR -----------------
     async function readStats(region) {
       const img = a1lib.getregion(region.x, region.y, region.w, region.h);
