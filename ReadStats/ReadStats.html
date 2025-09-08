@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.6</title>
+  <title>RS3 Stats Detector v1.7</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
@@ -18,7 +18,7 @@
     <button onclick="loadAssets()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.6 (smarter edge detection + faster)</div>
+    <div id="version">Build v1.7 (adaptive sizing)</div>
   </div>
 
   <script>
@@ -81,7 +81,7 @@
           const r1 = pixels[ci], g1 = pixels[ci+1], b1 = pixels[ci+2];
           const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
 
-          if (Math.abs(r1 - r2) < 30 && Math.abs(g1 - g2) < 30 && Math.abs(b1 - b2) < 30) {
+          if (Math.abs(r1 - r2) < 35 && Math.abs(g1 - g2) < 35 && Math.abs(b1 - b2) < 35) {
             matchCount++;
           }
         }
@@ -91,12 +91,13 @@
     }
 
     function findEdge(anchorX, anchorY, screenImg, direction) {
-      const range = (direction === "left" || direction === "right") ? 500 : 200;
-      const verticalSpan = 50;
-      let consec = 0;
+      const cw = screenImg.width;
+      const range = (direction === "left" || direction === "right") ? Math.floor(cw / 2) : 400;
+      const verticalSpan = 60;
+      let bestMatch = null;
 
       for (let d = 1; d <= range; d++) {
-        for (let offsetY = -verticalSpan; offsetY <= verticalSpan; offsetY += 2) {
+        for (let offsetY = -verticalSpan; offsetY <= verticalSpan; offsetY++) {
           let testX = anchorX;
           let testY = anchorY + offsetY;
 
@@ -104,18 +105,15 @@
           if (direction === "right") testX = anchorX + statAnchorData.width + d;
           if (direction === "up") testY = anchorY - d;
 
-          const threshold = (direction === "up") ? 0.9 : 0.95;
+          const threshold = (direction === "up") ? 0.88 : 0.92;
           if (matchesIconAt(testX, testY, screenImg, direction === "up" ? statRoofData : statBorderData, threshold)) {
-            consec++;
-            if (consec >= 2) {
-              return {x: testX, y: testY, dist: d};
-            }
-          } else {
-            consec = 0;
+            bestMatch = {x: testX, y: testY, dist: d};
+            return bestMatch; // stop at first strong match
           }
         }
       }
-      return null;
+
+      return bestMatch;
     }
 
     function findEdges(anchorX, anchorY, screenImg) {
@@ -132,12 +130,11 @@
       if (right) rightX = right.x + statBorderData.width;
       if (top) topY = top.y;
 
-      // sanity clamp
-      const width = rightX - leftX;
-      if (width < 150 || width > 500) {
-        setDebug(`Width out of bounds (${width}), falling back to anchor width`);
-        leftX = anchorX;
-        rightX = anchorX + 363; // fallback width ~stat window
+      // fallback if detection failed
+      if (!left || !right) {
+        const fallbackWidth = Math.floor(screenImg.width * 0.3);
+        leftX = left ? left.x : Math.max(0, anchorX - fallbackWidth);
+        rightX = right ? right.x + statBorderData.width : Math.min(screenImg.width, anchorX + fallbackWidth);
       }
 
       return {x: leftX, y: topY, w: rightX - leftX, h: bottomY - topY};
