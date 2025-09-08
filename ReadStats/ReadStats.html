@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.0</title>
+  <title>RS3 Stats Detector v1.1</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
@@ -14,10 +14,10 @@
 <body class="nis">
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>RS3 Stats Detector</h2>
-    <button onclick="startFinder()">Start Stats Finder</button>
+    <button id="startBtn">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.0 (pixel capture fixed)</div>
+    <div id="version">Build v1.1 (stat icon detection)</div>
   </div>
 
   <script>
@@ -33,22 +33,63 @@
       console.log("DEBUG:", msg);
     }
 
-    // Add a small helper to mimic capture() if needed
+    // Mimic capture() if missing
     if (!a1lib.capture) {
       a1lib.capture = function(x, y, w, h) {
         return a1lib.getregion(x, y, w, h);
       };
     }
 
-    // Initial Alt1 check
-    window.addEventListener("load", () => {
-      if (window.alt1) {
-        setStatus("Alt1 detected ✅");
-        alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
-      } else {
-        setStatus("Not running in Alt1 ❌", "red");
+    // Load stat icon
+    let statIconData = null;
+    function loadStatIcon(callback) {
+      const img = new Image();
+      img.src = "./statanchor.png";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        statIconData = ctx.getImageData(0, 0, img.width, img.height);
+        callback();
+      };
+      img.onerror = () => {
+        setStatus("Failed to load stat icon ❌", "red");
+      };
+    }
+
+    // Icon matching with tolerance
+    function matchIcon(chunkImg, iconData) {
+      const cw = chunkImg.width;
+      const ch = chunkImg.height;
+      const iw = iconData.width;
+      const ih = iconData.height;
+      const screenPixels = chunkImg.data;
+      const iconPixels = iconData.data;
+
+      for (let y = 0; y <= ch - ih; y++) {
+        for (let x = 0; x <= cw - iw; x++) {
+          let match = true;
+          for (let iy = 0; iy < ih && match; iy++) {
+            for (let ix = 0; ix < iw; ix++) {
+              const ci = 4 * ((x + ix) + (y + iy) * cw);
+              const ii = 4 * (ix + iy * iw);
+
+              const r1 = screenPixels[ci], g1 = screenPixels[ci+1], b1 = screenPixels[ci+2];
+              const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
+
+              if (Math.abs(r1 - r2) > 30 || Math.abs(g1 - g2) > 30 || Math.abs(b1 - b2) > 30) {
+                match = false;
+                break;
+              }
+            }
+          }
+          if (match) return {x: x, y: y};
+        }
       }
-    });
+      return null;
+    }
 
     function startFinder() {
       if (!window.alt1) {
@@ -99,40 +140,31 @@
         let w = Math.min(tileSize, screenW - x);
         let h = Math.min(tileSize, screenH - y);
 
-        // Overlay rectangle for the current chunk
         alt1.overLayRect(a1lib.mixcolor(0, 255, 255), x, y, w, h, 500, 1);
         alt1.overLayText(`#${chunkCounter}`, a1lib.mixcolor(255, 255, 255), 14, x + 10, y + 20, 500);
 
         try {
           let img = a1lib.getregion(x, y, w, h);
           if (!img) throw "No image returned from getregion()";
-          let pixels = img.data;
 
-          setDebug(
-            `Screen size: ${screenW}x${screenH}\n` +
-            `Pixel permission: ${alt1.permissionPixel}\n` +
-            `Current chunk: #${chunkCounter} at (${x},${y})\n` +
-            `Heartbeat: ${heartbeat}\n` +
-            `Got pixel buffer length: ${pixels.length}`
-          );
-
-          // Look for bright red pixel (heart icon)
-          for (let i = 0; i < pixels.length; i += 4) {
-            let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-            if (r > 200 && g < 80 && b < 80) {
-              let px = (i / 4) % w;
-              let py = Math.floor((i / 4) / w);
-              let absX = x + px, absY = y + py;
-              alt1.overLayRect(a1lib.mixcolor(255, 0, 0), absX - 5, absY - 5, 20, 20, 5000, 3);
-              setStatus(`Found bright red pixel at ~X:${absX}, Y:${absY} ✅`);
-              return;
-            }
+          let match = matchIcon(img, statIconData);
+          if (match) {
+            const absX = x + match.x;
+            const absY = y + match.y;
+            alt1.overLayRect(
+              a1lib.mixcolor(0, 255, 0),
+              absX - 5, absY - 5,
+              statIconData.width + 10,
+              statIconData.height + 10,
+              5000, 3
+            );
+            setStatus(`Found stat icon at ~X:${absX}, Y:${absY} ✅`);
+            return;
           }
         } catch (e) {
           setStatus(`Error in chunk #${chunkCounter}: ${e}`, "red");
         }
 
-        // Move to next chunk
         x += tileSize;
         if (x >= screenW) {
           x = 0;
@@ -144,6 +176,14 @@
 
       scanNextChunk();
     }
+
+    // Load icon first, then enable start button
+    document.getElementById("startBtn").disabled = true;
+    loadStatIcon(() => {
+      setStatus("Stat icon loaded, ready to scan ✅");
+      document.getElementById("startBtn").disabled = false;
+    });
+    document.getElementById("startBtn").onclick = startFinder;
   </script>
 </body>
 </html>
