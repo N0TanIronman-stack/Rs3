@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.7</title>
+  <title>RS3 Stats Detector v1.8</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
@@ -14,10 +14,10 @@
 <body class="nis">
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>RS3 Stats Detector</h2>
-    <button onclick="startFinder()">Start Stats Finder</button>
+    <button id="startBtn" disabled onclick="startFinder()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.7 (ImageCapture API)</div>
+    <div id="version">Build v1.8 (ImageCapture API)</div>
   </div>
 
   <script>
@@ -41,6 +41,9 @@
             capture = alt1.capture;
             alt1Ready = true;
             setStatus("Alt1 detected ✅");
+    
+            // Enable the button now
+            document.getElementById("startBtn").disabled = false;
         } else {
             setStatus("Not running in Alt1 ❌", "red");
         }
