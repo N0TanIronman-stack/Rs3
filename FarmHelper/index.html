@@ -287,8 +287,12 @@
 
         <!-- Page 2 -Herb Runs -->
         <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page2">
-            <h1>Herb Runs</h1>
-            <h6>(Same for Allotment/Flowers)</h6>
+           <ul> 
+           	<li>
+          		<h1 class="Area">Herb Runs</h1>
+            	<h6>(Same for Allotment/Flowers)</h6>
+          	</li>
+          </ul>
 
             <!-- Trollheim-->
             <ul>
@@ -547,9 +551,11 @@
 
             <!-- Page 6 -Settings -->
             <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page6">
-                <h1>Settings:</h1>
-                <h1 id="ShowSize"></h1>
-
+              <h1>Settings:</h1>
+              <label>
+                <input type="checkbox" id="guideModeToggle"> Enable Guide Mode
+              </label>
+              <h1 id="ShowSize"></h1>
             </div>
 
 
@@ -614,16 +620,16 @@
                 if (li.dataset.hiddenTitle) {
                   li.setAttribute("title", li.dataset.hiddenTitle);
                 }
-              } else {
-                li.classList.remove("hidden");
+                } else {
+                  li.classList.remove("hidden");
 
-                // restore the original title
-                if (li.dataset.originalTitle) {
-                  li.setAttribute("title", li.dataset.originalTitle);
+                  // restore the original title
+                  if (li.dataset.originalTitle) {
+                    li.setAttribute("title", li.dataset.originalTitle);
+                  }
                 }
-              }
+              });
             });
-          });
         
             //Show default page on load
             window.onload = () => showPage('page1');
@@ -648,20 +654,24 @@
               const areas = [...page.querySelectorAll(".Area")];   // all Area divs inside
               if (areas.length === 0) return;
 
-              // Find the closest Area currently in view
               const scrollTop = page.scrollTop;
-              const currentIndex = areas.findIndex(area => area.offsetTop > scrollTop + 10) - 1;
-              const safeIndex = currentIndex < 0 ? 0 : currentIndex;
+              let currentIndex = areas.findIndex(area => area.offsetTop > scrollTop + 10);
+
+              if (currentIndex === -1) {
+                currentIndex = areas.length - 1;
+              } else {
+                currentIndex = Math.max(0, currentIndex - 1);
+              }
 
               if (e.target.classList.contains("next-btn")) {
-                const next = areas[safeIndex + 1];
+                const next = areas[currentIndex + 1];
                 if (next) {
                   page.scrollTo({ top: next.offsetTop, behavior: "smooth" });
                 }
               }
 
               if (e.target.classList.contains("prev-btn")) {
-                const prev = areas[safeIndex - 1];
+                const prev = areas[currentIndex - 1];
                 if (prev) {
                   page.scrollTo({ top: prev.offsetTop, behavior: "smooth" });
                 }
@@ -669,6 +679,67 @@
             }
           });
           
+          // GuideMode
+          let guideMode = false;
+          let currentGuideIndex = 0;
+
+          document.getElementById("guideModeToggle").addEventListener("change", function(e) {
+            guideMode = e.target.checked;
+            currentGuideIndex = 0; // always reset to the first section
+
+            const pages = document.querySelectorAll(".scrollable-content");
+            pages.forEach(page => {
+              const areas = [...page.querySelectorAll(".Area")].map(a => a.closest("li"));
+              if (areas.length > 0) {
+                if (guideMode) {
+                  page.style.overflow = "hidden"; 
+                  page.style.position = "relative"; // container for absolute positioning
+
+                  areas.forEach((block, idx) => {
+                    block.style.position = "absolute";
+                    block.style.top = "0";
+                    block.style.left = "0";
+                    block.style.right = "0";
+                    block.style.display = (idx === 0 ? "block" : "none");
+                  });
+                } else {
+                  page.style.overflowY = "scroll"; 
+                  page.style.position = "";
+                  areas.forEach(block => {
+                    block.style.position = "";
+                    block.style.top = "";
+                    block.style.left = "";
+                    block.style.right = "";
+                    block.style.display = "block";
+                  });
+                }
+              }
+            });
+          });
+
+          document.addEventListener("click", function (e) {
+            if (guideMode && (e.target.classList.contains("next-btn") || e.target.classList.contains("prev-btn"))) {
+              const page = e.target.closest(".scrollable-content");
+              const areas = [...page.querySelectorAll(".Area")].map(a => a.closest("li"));
+              if (areas.length === 0) return;
+
+              if (e.target.classList.contains("next-btn")) {
+                if (currentGuideIndex < areas.length - 1) {
+                  areas[currentGuideIndex].style.display = "none";
+                  currentGuideIndex++;
+                  areas[currentGuideIndex].style.display = "block";
+                }
+              }
+
+              if (e.target.classList.contains("prev-btn")) {
+                if (currentGuideIndex > 0) {
+                  areas[currentGuideIndex].style.display = "none";
+                  currentGuideIndex--;
+                  areas[currentGuideIndex].style.display = "block";
+                }
+              }
+            }
+          });
           
         </script>
 </body>
