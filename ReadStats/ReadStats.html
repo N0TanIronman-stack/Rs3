@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.1</title>
+  <title>RS3 Stats Detector v1.2</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
@@ -17,7 +17,7 @@
     <button id="startBtn">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.1 (stat icon detection)</div>
+    <div id="version">Build v1.2 (stat icon detection)</div>
   </div>
 
   <script>
@@ -116,7 +116,7 @@
 
       setStatus("Starting scan…");
 
-      const tileSize = 300;
+      const tileSize = 1000;
       let x = 0, y = 0;
       let chunkCounter = 0;
       let heartbeat = 0;
@@ -171,7 +171,7 @@
           y += tileSize;
         }
 
-        setTimeout(scanNextChunk, 500);
+        setTimeout(scanNextChunk, 250);
       }
 
       scanNextChunk();
