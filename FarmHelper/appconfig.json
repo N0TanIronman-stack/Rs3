@@ -1,7 +1,7 @@
 {
   "appname": "Farming Helper",
   "description": "A tool to help get into farming runs",
-  "appurl": "index.html",
+  "appurl": "./index.html",
   "iconUrl": "./Farming_detail.png",
   "defaultWidth": 283,
   "defaultHeight": 283,
