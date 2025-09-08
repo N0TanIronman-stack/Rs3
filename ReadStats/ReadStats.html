@@ -32,53 +32,47 @@ function setDebug(msg) {
 
 // Core scan function
 function startScan() {
-    try {
-        const capture = alt1.capture; // assume Alt1 exists
-        const screenW = alt1.rsWidth || 0;
-        const screenH = alt1.rsHeight || 0;
+    // Wait until alt1.capture exists
+    const interval = setInterval(() => {
+        if (window.alt1 && alt1.capture) {
+            clearInterval(interval);
+            scanScreen(alt1.capture);
+        }
+    }, 100);
+}
 
-        setDebug(`Screen size: ${screenW}x${screenH}`);
+function scanScreen(capture) {
+    const screenW = alt1.rsWidth || 0;
+    const screenH = alt1.rsHeight || 0;
+    let x = 0, y = 0;
+    const tileSize = 300;
 
-        const tileSize = 300;
-        let x = 0, y = 0;
+    function scanChunk() {
+        if (y >= screenH) return;
 
-        function scanChunk() {
-            if (y >= screenH) {
-                setStatus("Finished scan ❌", "red");
-                return;
+        const w = Math.min(tileSize, screenW - x);
+        const h = Math.min(tileSize, screenH - y);
+
+        const img = capture.capture(x, y, w, h);
+        const pixels = img.toData();
+
+        // Example: detect bright red pixels
+        for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+            if (r > 200 && g < 80 && b < 80) {
+                let px = (i/4) % w;
+                let py = Math.floor((i/4)/w);
+                let absX = x + px, absY = y + py;
+                alt1.overLayRect(a1lib.mixcolor(255,0,0), absX-5, absY-5, 20,20,5000,3);
             }
-
-            const w = Math.min(tileSize, screenW - x);
-            const h = Math.min(tileSize, screenH - y);
-
-            let img = capture.capture(x, y, w, h);
-            let pixels = img.toData();
-
-            // Simple example: detect bright red pixel (you can replace with skill icon detection)
-            for (let i = 0; i < pixels.length; i += 4) {
-                let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-                if (r > 200 && g < 80 && b < 80) {
-                    let px = (i/4) % w;
-                    let py = Math.floor((i/4)/w);
-                    let absX = x + px, absY = y + py;
-                    alt1.overLayRect(a1lib.mixcolor(255,0,0), absX-5, absY-5, 20,20,5000,3);
-                    setStatus(`Found red pixel ~X:${absX} Y:${absY} ✅`);
-                    return;
-                }
-            }
-
-            x += tileSize;
-            if (x >= screenW) { x = 0; y += tileSize; }
-            setTimeout(scanChunk, 100); // next chunk
         }
 
-        setStatus("Starting scan…");
-        scanChunk();
-
-    } catch(e) {
-        setStatus("Error during scan ❌", "red");
-        console.error(e);
+        x += tileSize;
+        if (x >= screenW) { x = 0; y += tileSize; }
+        setTimeout(scanChunk, 100);
     }
+
+    scanChunk();
 }
 
 startBtn.addEventListener("click", startScan);
