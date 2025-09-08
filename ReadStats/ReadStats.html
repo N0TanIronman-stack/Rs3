@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.3</title>
+  <title>RS3 Stats Detector v1.4</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
@@ -18,7 +18,7 @@
     <button onclick="loadAssets()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.3 (edge detection)</div>
+    <div id="version">Build v1.4 (refined width + fixed height)</div>
   </div>
 
   <script>
@@ -90,35 +90,44 @@
       return (matchCount / total) >= threshold;
     }
 
+    function findBestEdge(anchorX, anchorY, screenImg, direction) {
+      let bestMatch = null;
+      let maxScore = 0;
+      const range = (direction === "left" || direction === "right") ? 500 : 200;
+
+      for (let d = 1; d <= range; d++) {
+        let testX = anchorX;
+        let testY = anchorY;
+
+        if (direction === "left") testX = anchorX - d;
+        if (direction === "right") testX = anchorX + statAnchorData.width + d;
+        if (direction === "up") testY = anchorY - d;
+
+        if (matchesIconAt(testX, testY, screenImg, direction === "up" ? statRoofData : statBorderData)) {
+          // crude score = distance (closer is better)
+          let score = 1 / d;
+          if (score > maxScore) {
+            maxScore = score;
+            bestMatch = {x: testX, y: testY};
+          }
+        }
+      }
+      return bestMatch;
+    }
+
     function findEdges(anchorX, anchorY, screenImg) {
       let leftX = anchorX;
       let rightX = anchorX + statAnchorData.width;
       let topY = anchorY;
-      let bottomY = anchorY + statAnchorData.height + 200; // placeholder guess
+      let bottomY = anchorY + statAnchorData.height; // fixed to bottom of anchor
 
-      // Search left (up to 500px)
-      for (let dx = 1; dx <= 500; dx++) {
-        if (matchesIconAt(anchorX - dx, anchorY, screenImg, statBorderData)) {
-          leftX = anchorX - dx;
-          break;
-        }
-      }
+      const left = findBestEdge(anchorX, anchorY, screenImg, "left");
+      const right = findBestEdge(anchorX, anchorY, screenImg, "right");
+      const top = findBestEdge(anchorX, anchorY, screenImg, "up");
 
-      // Search right (up to 500px)
-      for (let dx = 1; dx <= 500; dx++) {
-        if (matchesIconAt(anchorX + statAnchorData.width + dx, anchorY, screenImg, statBorderData)) {
-          rightX = anchorX + statAnchorData.width + dx + statBorderData.width;
-          break;
-        }
-      }
-
-      // Search upward (up to 200px)
-      for (let dy = 1; dy <= 200; dy++) {
-        if (matchesIconAt(anchorX, anchorY - dy, screenImg, statRoofData)) {
-          topY = anchorY - dy;
-          break;
-        }
-      }
+      if (left) leftX = left.x;
+      if (right) rightX = right.x + statBorderData.width;
+      if (top) topY = top.y;
 
       return {x: leftX, y: topY, w: rightX - leftX, h: bottomY - topY};
     }
@@ -153,6 +162,7 @@
 
         const region = findEdges(absX, absY, screenImg);
         alt1.overLayRect(a1lib.mixcolor(0, 0, 255), region.x, region.y, region.w, region.h, 5000, 3);
+        setDebug(`Region calc → X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h}`);
         setStatus(`Stat window detected at X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h} ✅`);
       } else {
         setStatus("Could not find stat anchor ❌", "red");
