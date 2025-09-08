@@ -4,10 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>RS3 Stats Detector v1.6</title>
-  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css":/>
-  <link rel="stylesheet" type="text/css" href="https://runeapps.org/alt1lib.js"/>
-  <style> 
-    #status { margin-top: 10px; font-weight: bold; color: lime; }
+  <link rel="stylesheet" type="text/css" href="https://runeuneapps.org/alt1lib.js"></script{ margin-top: 10px; font-weight: bold; color: lime; }
     #debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
     #version { margin-top: 5px; font-size: 12px; color: gray; }
   </style>
@@ -37,21 +34,18 @@
     }
 
     a1lib.on("ready", () => {
-      if (window.alt1 && a1lib.ImageCapture) {
+      if (window.alt1 && typeof a1lib.ImageCapture === "function") {
         setStatus("Alt1 detected ✅");
         alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
 
-        // Delay initialization slightly
-        setTimeout(() => {
-          try {
-            capture = new a1lib.ImageCapture();
-            console.log("Capture object:", capture);
-            setDebug("ImageCapture initialized successfully ✅");
-          } catch (e) {
-            setStatus("Failed to init ImageCapture ❌", "red");
-            setDebug("Error initializing ImageCapture: " + e.message);
-          }
-        }, 500);
+        try {
+          capture = new a1lib.ImageCapture();
+          console.log("Capture object:", capture);
+          setDebug("ImageCapture initialized successfully ✅");
+        } catch (e) {
+          setStatus("Failed to init ImageCapture ❌", "red");
+          setDebug("Error initializing ImageCapture: " + e.message);
+        }
       } else {
         setStatus("Alt1 or ImageCapture not available ❌", "red");
         setDebug("Alt1: " + !!window.alt1 + ", ImageCapture: " + !!a1lib.ImageCapture);
