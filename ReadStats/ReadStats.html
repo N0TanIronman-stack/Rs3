@@ -22,6 +22,7 @@
 
   <script>
     let capture = null;
+    let alt1Ready = false;
 
     function setStatus(msg, color = "lime") {
       const el = document.getElementById("status");
@@ -37,15 +38,17 @@
 
     a1lib.on("ready", () => {
         if (window.alt1) {
-            setStatus("Alt1 detected ✅");
-            alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
-    
-            // Correct capture initialization
             capture = alt1.capture;
+            alt1Ready = true;
+            setStatus("Alt1 detected ✅");
         } else {
             setStatus("Not running in Alt1 ❌", "red");
         }
     });
+
+    console.log("Alt1 ready:", alt1Ready);
+    console.log("Capture object:", capture);
+    console.log("Capture function exists:", capture?.capture);
 
     function startFinder() {
       if (!window.alt1) {
@@ -56,6 +59,15 @@
         setStatus("Pixel permission not granted ❌", "red");
         return;
       }
+
+      if (!alt1Ready) {
+        setStatus("Alt1 not ready yet ❌", "red");
+        return;
+        }
+        if (!capture) {
+            setStatus("Capture not initialized ❌", "red");
+            return;
+        }
 
       const screenW = alt1.rsWidth || 0;
       const screenH = alt1.rsHeight || 0;
