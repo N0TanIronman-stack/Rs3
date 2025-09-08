@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.7</title>
+  <title>RS3 Stats Detector v1.8</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
@@ -18,7 +18,7 @@
     <button onclick="loadAssets()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.7 (adaptive sizing)</div>
+    <div id="version">Build v1.8 (adaptive & bottom edge)</div>
   </div>
 
   <script>
@@ -87,16 +87,16 @@
         }
       }
 
-      return (matchCount / total) >= threshold;
+      return matchCount / total;
     }
 
     function findEdge(anchorX, anchorY, screenImg, direction) {
-      const cw = screenImg.width;
-      const range = (direction === "left" || direction === "right") ? Math.floor(cw / 2) : 400;
-      const verticalSpan = 60;
-      let bestMatch = null;
+      const cw = screenImg.width, ch = screenImg.height;
+      const maxRange = (direction === "left" || direction === "right") ? Math.floor(cw / 2) : Math.floor(ch / 2);
+      const verticalSpan = 80;
+      let best = {score: 0, x: 0, y: 0};
 
-      for (let d = 1; d <= range; d++) {
+      for (let d = 1; d <= maxRange; d++) {
         for (let offsetY = -verticalSpan; offsetY <= verticalSpan; offsetY++) {
           let testX = anchorX;
           let testY = anchorY + offsetY;
@@ -104,16 +104,18 @@
           if (direction === "left") testX = anchorX - d;
           if (direction === "right") testX = anchorX + statAnchorData.width + d;
           if (direction === "up") testY = anchorY - d;
+          if (direction === "down") testY = anchorY + statAnchorData.height + d;
 
-          const threshold = (direction === "up") ? 0.88 : 0.92;
-          if (matchesIconAt(testX, testY, screenImg, direction === "up" ? statRoofData : statBorderData, threshold)) {
-            bestMatch = {x: testX, y: testY, dist: d};
-            return bestMatch; // stop at first strong match
+          const tpl = (direction === "up") ? statRoofData : statBorderData;
+          const score = matchesIconAt(testX, testY, screenImg, tpl);
+
+          if (score > best.score) {
+            best = {score, x: testX, y: testY};
           }
         }
       }
 
-      return bestMatch;
+      return (best.score >= 0.85) ? best : null;
     }
 
     function findEdges(anchorX, anchorY, screenImg) {
@@ -125,17 +127,12 @@
       const left = findEdge(anchorX, anchorY, screenImg, "left");
       const right = findEdge(anchorX, anchorY, screenImg, "right");
       const top = findEdge(anchorX, anchorY, screenImg, "up");
+      const bottom = findEdge(anchorX, anchorY, screenImg, "down");
 
-      if (left) leftX = left.x;
-      if (right) rightX = right.x + statBorderData.width;
-      if (top) topY = top.y;
-
-      // fallback if detection failed
-      if (!left || !right) {
-        const fallbackWidth = Math.floor(screenImg.width * 0.3);
-        leftX = left ? left.x : Math.max(0, anchorX - fallbackWidth);
-        rightX = right ? right.x + statBorderData.width : Math.min(screenImg.width, anchorX + fallbackWidth);
-      }
+      if (left) { leftX = left.x; alt1.overLayRect(a1lib.mixcolor(255,0,0), left.x, left.y, 5, 5, 4000, 2); }
+      if (right) { rightX = right.x + statBorderData.width; alt1.overLayRect(a1lib.mixcolor(255,0,0), right.x, right.y, 5, 5, 4000, 2); }
+      if (top) { topY = top.y; alt1.overLayRect(a1lib.mixcolor(255,0,0), top.x, top.y, 5, 5, 4000, 2); }
+      if (bottom) { bottomY = bottom.y + statBorderData.height; alt1.overLayRect(a1lib.mixcolor(255,0,0), bottom.x, bottom.y, 5, 5, 4000, 2); }
 
       return {x: leftX, y: topY, w: rightX - leftX, h: bottomY - topY};
     }
@@ -170,8 +167,8 @@
 
         const region = findEdges(absX, absY, screenImg);
         alt1.overLayRect(a1lib.mixcolor(0, 0, 255), region.x, region.y, region.w, region.h, 5000, 3);
-        setDebug(`Region calc → X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h}`);
-        setStatus(`Stat window detected at X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h} ✅`);
+        setDebug(`Region → X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h}`);
+        setStatus(`Stat window detected ✅`);
       } else {
         setStatus("Could not find stat anchor ❌", "red");
       }
@@ -181,7 +178,7 @@
       const cw = screenImg.width, ch = screenImg.height;
       for (let y = 0; y <= ch - icon.height; y++) {
         for (let x = 0; x <= cw - icon.width; x++) {
-          if (matchesIconAt(x, y, screenImg, icon)) {
+          if (matchesIconAt(x, y, screenImg, icon) > 0.9) {
             return {x: x, y: y};
           }
         }
