@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>RS3 Stats Detector v2.0</title>
+    <title>RS3 Stats Detector v2.1</title>
     <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
     <script src="https://runeapps.org/alt1lib.js"></script>
     <style>
@@ -16,9 +16,9 @@
 <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>RS3 Stats Detector</h2>
     <button id="startBtn" disabled>Start Stats Finder</button>
-    <div id="status">Waiting…</div>
+    <div id="status">Waiting for Alt1…</div>
     <div id="debug"></div>
-    <div id="version">Build v2.0 (Alt1 ready + capture)</div>
+    <div id="version">Build v2.1 (Polling Ready + Capture)</div>
 </div>
 
 <script>
@@ -40,24 +40,25 @@ function setDebug(msg) {
     console.log("DEBUG:", msg);
 }
 
-// Initialize Alt1 and capture
-async function initAlt1() {
-    if (!window.alt1) {
-        setStatus("Not running in Alt1 ❌", "red");
-        return;
-    }
+// Polling-ready pattern for Alt1
+function waitForAlt1Ready(callback) {
+    const interval = setInterval(() => {
+        if (window.alt1 && alt1.capture) {
+            clearInterval(interval);
+            callback();
+        }
+    }, 100); // check every 100ms
+}
 
-    try {
-        await alt1.ready(); // wait for Alt1 to be fully ready
+// Initialize Alt1 and capture
+function initAlt1() {
+    waitForAlt1Ready(() => {
         capture = alt1.capture;
         alt1Ready = true;
         setStatus("Alt1 detected ✅");
         startBtn.disabled = false;
         console.log("Alt1 ready, capture object:", capture);
-    } catch (e) {
-        setStatus("Error initializing Alt1 ❌", "red");
-        console.error(e);
-    }
+    });
 }
 
 // Main scan function
@@ -144,7 +145,7 @@ function startFinder() {
 // Hook button
 startBtn.addEventListener("click", startFinder);
 
-// Initialize Alt1 when page loads
+// Start initialization when page loads
 initAlt1();
 </script>
 </body>
