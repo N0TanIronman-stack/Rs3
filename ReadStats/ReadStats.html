@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.2</title>
+  <title>RS3 Stats Detector v1.3</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
+  <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
   <style>
     #status { margin-top: 10px; font-weight: bold; color: lime; }
     #debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
@@ -17,7 +18,7 @@
     <button id="startBtn">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.2 (stat icon detection)</div>
+    <div id="version">Build v1.3 (stat window OCR)</div>
   </div>
 
   <script>
@@ -33,38 +34,48 @@
       console.log("DEBUG:", msg);
     }
 
-    // Mimic capture() if missing
     if (!a1lib.capture) {
       a1lib.capture = function(x, y, w, h) {
         return a1lib.getregion(x, y, w, h);
       };
     }
 
-    // Load stat icon
-    let statIconData = null;
-    function loadStatIcon(callback) {
+    // ----------------- Load images -----------------
+    let statAnchorData = null;
+    let statBorderData = null;
+    let statRoofData = null;
+
+    function loadImage(src, callback) {
       const img = new Image();
-      img.src = "./statanchor.png";
+      img.src = src;
       img.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        statIconData = ctx.getImageData(0, 0, img.width, img.height);
-        callback();
+        callback(ctx.getImageData(0, 0, img.width, img.height));
       };
       img.onerror = () => {
-        setStatus("Failed to load stat icon ❌", "red");
+        setStatus(`Failed to load ${src} ❌`, "red");
       };
     }
 
-    // Icon matching with tolerance
+    function loadAllImages(callback) {
+      let loaded = 0;
+      function checkDone() {
+        loaded++;
+        if (loaded === 3) callback();
+      }
+      loadImage("./statanchor.png", data => { statAnchorData = data; checkDone(); });
+      loadImage("./statborder.png", data => { statBorderData = data; checkDone(); });
+      loadImage("./statroof.png", data => { statRoofData = data; checkDone(); });
+    }
+
+    // ----------------- Template matching -----------------
     function matchIcon(chunkImg, iconData) {
-      const cw = chunkImg.width;
-      const ch = chunkImg.height;
-      const iw = iconData.width;
-      const ih = iconData.height;
+      const cw = chunkImg.width, ch = chunkImg.height;
+      const iw = iconData.width, ih = iconData.height;
       const screenPixels = chunkImg.data;
       const iconPixels = iconData.data;
 
@@ -85,102 +96,99 @@
               }
             }
           }
-          if (match) return {x: x, y: y};
+          if (match) return {x, y};
         }
       }
       return null;
     }
 
-    function startFinder() {
-      if (!window.alt1) {
-        setStatus("Not running in Alt1 ❌", "red");
-        return;
-      }
-      if (!alt1.permissionPixel) {
-        setStatus("Pixel permission not granted ❌", "red");
-        return;
-      }
+    // ----------------- Edge detection -----------------
+    function findEdges(anchorX, anchorY, screenImg) {
+      const cw = screenImg.width, ch = screenImg.height;
+      const pixels = screenImg.data;
 
-      const screenW = alt1.rsWidth || 0;
-      const screenH = alt1.rsHeight || 0;
-
-      setDebug(
-        `Screen size: ${screenW}x${screenH}\n` +
-        `Pixel permission: ${alt1.permissionPixel}`
-      );
-
-      if (screenW === 0 || screenH === 0) {
-        setStatus("Alt1 reports 0x0 screen ❌", "red");
-        return;
-      }
-
-      setStatus("Starting scan…");
-
-      const tileSize = 2000;
-      let x = 0, y = 0;
-      let chunkCounter = 0;
-      let heartbeat = 0;
-
-      function scanNextChunk() {
-        chunkCounter++;
-        heartbeat++;
-
-        if (y >= screenH) {
-          setStatus("Finished scan — no match ❌", "red");
-          return;
-        }
-
-        setDebug(
-          `Screen size: ${screenW}x${screenH}\n` +
-          `Pixel permission: ${alt1.permissionPixel}\n` +
-          `Current chunk: #${chunkCounter} at (${x},${y})\n` +
-          `Heartbeat: ${heartbeat}`
-        );
-
-        let w = Math.min(tileSize, screenW - x);
-        let h = Math.min(tileSize, screenH - y);
-
-        alt1.overLayRect(a1lib.mixcolor(0, 255, 255), x, y, w, h, 500, 1);
-        alt1.overLayText(`#${chunkCounter}`, a1lib.mixcolor(255, 255, 255), 14, x + 10, y + 20, 500);
-
-        try {
-          let img = a1lib.getregion(x, y, w, h);
-          if (!img) throw "No image returned from getregion()";
-
-          let match = matchIcon(img, statIconData);
-          if (match) {
-            const absX = x + match.x;
-            const absY = y + match.y;
-            alt1.overLayRect(
-              a1lib.mixcolor(0, 255, 0),
-              absX - 5, absY - 5,
-              statIconData.width + 10,
-              statIconData.height + 10,
-              5000, 3
-            );
-            setStatus(`Found stat icon at ~X:${absX}, Y:${absY} ✅`);
-            return;
+      // Helper: compare icon to pixels at given position
+      function matchesIconAt(x0, y0, icon) {
+        const iw = icon.width, ih = icon.height, iconPixels = icon.data;
+        for (let iy = 0; iy < ih; iy++) {
+          for (let ix = 0; ix < iw; ix++) {
+            const ci = 4 * ((x0 + ix) + (y0 + iy) * cw);
+            const ii = 4 * (ix + iy * iw);
+            const r1 = pixels[ci], g1 = pixels[ci+1], b1 = pixels[ci+2];
+            const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
+            if (Math.abs(r1 - r2) > 30 || Math.abs(g1 - g2) > 30 || Math.abs(b1 - b2) > 30) return false;
           }
-        } catch (e) {
-          setStatus(`Error in chunk #${chunkCounter}: ${e}`, "red");
         }
-
-        x += tileSize;
-        if (x >= screenW) {
-          x = 0;
-          y += tileSize;
-        }
-
-        setTimeout(scanNextChunk, 50);
+        return true;
       }
 
-      scanNextChunk();
+      let leftX = anchorX;
+      while (leftX > 0 && matchesIconAt(leftX - 1, anchorY, statBorderData)) leftX--;
+
+      let rightX = anchorX;
+      while (rightX < cw - statBorderData.width && matchesIconAt(rightX + 1, anchorY, statBorderData)) rightX++;
+
+      let topY = anchorY;
+      while (topY > 0 && matchesIconAt(anchorX, topY - 1, statRoofData)) topY--;
+
+      let bottomY = topY + statAnchorData.height + 10; // rough estimate, can refine
+
+      return {x: leftX, y: topY, w: rightX - leftX + statBorderData.width, h: bottomY - topY};
     }
 
-    // Load icon first, then enable start button
+    // ----------------- OCR -----------------
+    async function readStats(region) {
+      const img = a1lib.getregion(region.x, region.y, region.w, region.h);
+      if (!img) return null;
+      const result = await alt1.ocr(img);
+      return result;
+    }
+
+    // ----------------- Main scanning -----------------
+    function startFinder() {
+      if (!window.alt1 || !alt1.permissionPixel) {
+        setStatus("Alt1 not ready or pixel permission missing ❌", "red");
+        return;
+      }
+
+      const screenW = alt1.rsWidth || 0, screenH = alt1.rsHeight || 0;
+      const fullScreenImg = a1lib.getregion(0, 0, screenW, screenH);
+      if (!fullScreenImg) {
+        setStatus("Failed to capture screen ❌", "red");
+        return;
+      }
+
+      // Step 1: Find stat anchor
+      const anchorPos = matchIcon(fullScreenImg, statAnchorData);
+      if (!anchorPos) {
+        setStatus("Stat anchor not found ❌", "red");
+        return;
+      }
+
+      alt1.overLayRect(a1lib.mixcolor(0, 255, 0), anchorPos.x-5, anchorPos.y-5,
+                       statAnchorData.width+10, statAnchorData.height+10, 5000, 3);
+      setStatus(`Stat anchor found at X:${anchorPos.x}, Y:${anchorPos.y} ✅`);
+
+      // Step 2: Detect edges
+      const statRegion = findEdges(anchorPos.x, anchorPos.y, fullScreenImg);
+      alt1.overLayRect(a1lib.mixcolor(0, 0, 255), statRegion.x, statRegion.y, statRegion.w, statRegion.h, 5000, 3);
+      setStatus(`Stat window detected at X:${statRegion.x}, Y:${statRegion.y}, W:${statRegion.w}, H:${statRegion.h} ✅`);
+
+      // Step 3: OCR the region
+      readStats(statRegion).then(result => {
+        if (result) {
+          setDebug("OCR result:\n" + JSON.stringify(result, null, 2));
+          setStatus("Stats read successfully ✅");
+        } else {
+          setStatus("OCR failed ❌", "red");
+        }
+      });
+    }
+
+    // ----------------- Init -----------------
     document.getElementById("startBtn").disabled = true;
-    loadStatIcon(() => {
-      setStatus("Stat icon loaded, ready to scan ✅");
+    loadAllImages(() => {
+      setStatus("All images loaded, ready ✅");
       document.getElementById("startBtn").disabled = false;
     });
     document.getElementById("startBtn").onclick = startFinder;
