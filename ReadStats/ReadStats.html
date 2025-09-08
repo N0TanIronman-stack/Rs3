@@ -1,81 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>RS3 Skills Detector</title>
-<script src="https://runeapps.org/alt1lib.js"></script>
-<style>
-#status { margin-top: 10px; font-weight: bold; color: lime; }
-#debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
-button { margin-top: 10px; }
-</style>
+  <meta charset="UTF-8">
+  <title>RS3 Stats Detector v1.5</title>
+  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
+  <script src="https://runeapps.org/alt1lib.js"></script>
+  <style>
+    #status { margin-top: 10px; font-weight: bold; color: lime; }
+    #debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
+    #version { margin-top: 5px; font-size: 12px; color: gray; }
+  </style>
 </head>
-<body>
-<h2>RS3 Skills Detector</h2>
-<button id="startBtn">Start Scan</button>
-<div id="status">Waiting…</div>
-<div id="debug"></div>
+<body class="nis">
+  <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
+    <h2>RS3 Stats Detector</h2>
+    <button onclick="startFinder()">Start Stats Finder</button>
+    <div id="status">Waiting…</div>
+    <div id="debug"></div>
+    <div id="version">Build v1.5 (fixed pixel capture)</div>
+  </div>
 
-<script>
-const startBtn = document.getElementById("startBtn");
-const statusEl = document.getElementById("status");
-const debugEl = document.getElementById("debug");
-
-function setStatus(msg, color="lime") {
-    statusEl.innerText = msg;
-    statusEl.style.color = color;
-}
-
-function setDebug(msg) {
-    debugEl.innerText = msg;
-}
-
-// Core scan function
-function startScan() {
-    // Wait until alt1.capture exists
-    const interval = setInterval(() => {
-        if (window.alt1 && alt1.capture) {
-            clearInterval(interval);
-            scanScreen(alt1.capture);
-        }
-    }, 100);
-}
-
-function scanScreen(capture) {
-    const screenW = alt1.rsWidth || 0;
-    const screenH = alt1.rsHeight || 0;
-    let x = 0, y = 0;
-    const tileSize = 300;
-
-    function scanChunk() {
-        if (y >= screenH) return;
-
-        const w = Math.min(tileSize, screenW - x);
-        const h = Math.min(tileSize, screenH - y);
-
-        const img = capture.capture(x, y, w, h);
-        const pixels = img.toData();
-
-        // Example: detect bright red pixels
-        for (let i = 0; i < pixels.length; i += 4) {
-            let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
-            if (r > 200 && g < 80 && b < 80) {
-                let px = (i/4) % w;
-                let py = Math.floor((i/4)/w);
-                let absX = x + px, absY = y + py;
-                alt1.overLayRect(a1lib.mixcolor(255,0,0), absX-5, absY-5, 20,20,5000,3);
-            }
-        }
-
-        x += tileSize;
-        if (x >= screenW) { x = 0; y += tileSize; }
-        setTimeout(scanChunk, 100);
+  <script>
+    function setStatus(msg, color = "lime") {
+      const el = document.getElementById("status");
+      el.innerText = msg;
+      el.style.color = color;
+      console.log(msg);
     }
 
-    scanChunk();
-}
+    function setDebug(msg) {
+      document.getElementById("debug").innerText = msg;
+      console.log("DEBUG:", msg);
+    }
 
-startBtn.addEventListener("click", startScan);
-</script>
+    a1lib.on("ready", () => {
+      if (window.alt1) {
+        setStatus("Alt1 detected ✅");
+        alt1.overLayText("Alt1 ready", a1lib.mixcolor(0, 255, 0), 20, 200, 200, 3000);
+      } else {
+        setStatus("Not running in Alt1 ❌", "red");
+      }
+    });
+
+    function startFinder() {
+      if (!window.alt1) {
+        setStatus("Not running in Alt1 ❌", "red");
+        return;
+      }
+      if (!alt1.permissionPixel) {
+        setStatus("Pixel permission not granted ❌", "red");
+        return;
+      }
+
+      const screenW = alt1.rsWidth || 0;
+      const screenH = alt1.rsHeight || 0;
+
+      setDebug(
+        `Screen size: ${screenW}x${screenH}\n` +
+        `Pixel permission: ${alt1.permissionPixel}`
+      );
+
+      if (screenW === 0 || screenH === 0) {
+        setStatus("Alt1 reports 0x0 screen ❌", "red");
+        return;
+      }
+
+      setStatus("Starting scan…");
+
+      const tileSize = 300;
+      let x = 0, y = 0;
+      let chunkCounter = 0;
+      let heartbeat = 0;
+
+      function scanNextChunk() {
+        chunkCounter++;
+        heartbeat++;
+
+        if (y >= screenH) {
+          setStatus("Finished scan — no match ❌", "red");
+          return;
+        }
+
+        setDebug(
+          `Screen size: ${screenW}x${screenH}\n` +
+          `Pixel permission: ${alt1.permissionPixel}\n` +
+          `Current chunk: #${chunkCounter} at (${x},${y})\n` +
+          `Heartbeat: ${heartbeat}`
+        );
+
+        let w = Math.min(tileSize, screenW - x);
+        let h = Math.min(tileSize, screenH - y);
+
+        // Overlay rectangle for the current chunk
+        alt1.overLayRect(a1lib.mixcolor(0, 255, 255), x, y, w, h, 500, 1);
+        alt1.overLayText(`#${chunkCounter}`, a1lib.mixcolor(255, 255, 255), 14, x + 10, y + 20, 500);
+
+        try {
+          let img = a1lib.capture(x, y, w, h);
+          let pixels = img.toData();
+
+          setDebug(
+            `Screen size: ${screenW}x${screenH}\n` +
+            `Pixel permission: ${alt1.permissionPixel}\n` +
+            `Current chunk: #${chunkCounter} at (${x},${y})\n` +
+            `Heartbeat: ${heartbeat}\n` +
+            `Got pixel buffer length: ${pixels.length}`
+          );
+
+          // Look for bright red pixel (heart icon)
+          for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+            if (r > 200 && g < 80 && b < 80) {
+              let px = (i / 4) % w;
+              let py = Math.floor((i / 4) / w);
+              let absX = x + px, absY = y + py;
+              alt1.overLayRect(a1lib.mixcolor(255, 0, 0), absX - 5, absY - 5, 20, 20, 5000, 3);
+              setStatus(`Found bright red pixel at ~X:${absX}, Y:${absY} ✅`);
+              return;
+            }
+          }
+        } catch (e) {
+          setStatus(`Error in chunk #${chunkCounter}: ${e}`, "red");
+        }
+
+        // Move to next chunk
+        x += tileSize;
+        if (x >= screenW) {
+          x = 0;
+          y += tileSize;
+        }
+
+        setTimeout(scanNextChunk, 500);
+      }
+
+      scanNextChunk();
+    }
+  </script>
 </body>
 </html>
