@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Detector v1.1</title>
+  <title>RS3 Stats Detector v1.3</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <script src="https://runeapps.org/alt1lib.js"></script>
   <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
@@ -15,13 +15,15 @@
 <body class="nis">
   <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>RS3 Stats Detector</h2>
-    <button id="startBtn">Start Stats Finder</button>
+    <button onclick="loadAssets()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.1 (stat window OCR)</div>
+    <div id="version">Build v1.3 (edge detection)</div>
   </div>
 
   <script>
+    let statAnchorData = null, statBorderData = null, statRoofData = null;
+
     function setStatus(msg, color = "lime") {
       const el = document.getElementById("status");
       el.innerText = msg;
@@ -34,20 +36,9 @@
       console.log("DEBUG:", msg);
     }
 
-    if (!a1lib.capture) {
-      a1lib.capture = function(x, y, w, h) {
-        return a1lib.getregion(x, y, w, h);
-      };
-    }
-
-    // ----------------- Load images -----------------
-    let statAnchorData = null;
-    let statBorderData = null;
-    let statRoofData = null;
-
-    function loadImage(src, callback) {
+    function loadImage(path, callback) {
       const img = new Image();
-      img.src = src;
+      img.src = path;
       img.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = img.width;
@@ -56,155 +47,129 @@
         ctx.drawImage(img, 0, 0);
         callback(ctx.getImageData(0, 0, img.width, img.height));
       };
-      img.onerror = () => {
-        setStatus(`Failed to load ${src} ❌`, "red");
-      };
+      img.onerror = () => setStatus(`Failed to load ${path} ❌`, "red");
     }
 
-    function loadAllImages(callback) {
-      let loaded = 0;
-      function checkDone() {
-        loaded++;
-        if (loaded === 3) callback();
-      }
-      loadImage("./statanchor.png", data => { statAnchorData = data; checkDone(); });
-      loadImage("./statborder.png", data => { statBorderData = data; checkDone(); });
-      loadImage("./statroof.png", data => { statRoofData = data; checkDone(); });
+    function loadAssets() {
+      loadImage("./statanchor.png", data => {
+        statAnchorData = data;
+        loadImage("./statborder.png", data2 => {
+          statBorderData = data2;
+          loadImage("./statroof.png", data3 => {
+            statRoofData = data3;
+            startFinder();
+          });
+        });
+      });
     }
 
-    // ----------------- Template matching -----------------
-    function matchIcon(chunkImg, iconData) {
-      const cw = chunkImg.width, ch = chunkImg.height;
-      const iw = iconData.width, ih = iconData.height;
-      const screenPixels = chunkImg.data;
-      const iconPixels = iconData.data;
-
-      for (let y = 0; y <= ch - ih; y++) {
-        for (let x = 0; x <= cw - iw; x++) {
-          let match = true;
-          for (let iy = 0; iy < ih && match; iy++) {
-            for (let ix = 0; ix < iw; ix++) {
-              const ci = 4 * ((x + ix) + (y + iy) * cw);
-              const ii = 4 * (ix + iy * iw);
-
-              const r1 = screenPixels[ci], g1 = screenPixels[ci+1], b1 = screenPixels[ci+2];
-              const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
-
-              if (Math.abs(r1 - r2) > 30 || Math.abs(g1 - g2) > 30 || Math.abs(b1 - b2) > 30) {
-                match = false;
-                break;
-              }
-            }
-          }
-          if (match) return {x, y};
-        }
-      }
-      return null;
-    }
-
-    // ----------------- Edge detection -----------------
-    function findEdges(anchorX, anchorY, screenImg) {
+    function matchesIconAt(x0, y0, screenImg, icon, threshold = 0.9) {
+      const iw = icon.width, ih = icon.height;
+      const iconPixels = icon.data;
       const cw = screenImg.width, ch = screenImg.height;
       const pixels = screenImg.data;
-    
-      function matchesIconAt(x0, y0, icon) {
-        const iw = icon.width, ih = icon.height, iconPixels = icon.data;
-        for (let iy = 0; iy < ih; iy++) {
-          for (let ix = 0; ix < iw; ix++) {
-            const ci = 4 * ((x0 + ix) + (y0 + iy) * cw);
-            const ii = 4 * (ix + iy * iw);
-            const r1 = pixels[ci], g1 = pixels[ci+1], b1 = pixels[ci+2];
-            const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
-            if (Math.abs(r1 - r2) > 30 || Math.abs(g1 - g2) > 30 || Math.abs(b1 - b2) > 30)
-              return false;
+
+      if (x0 < 0 || y0 < 0 || x0 + iw > cw || y0 + ih > ch) return false;
+
+      let matchCount = 0, total = iw * ih;
+
+      for (let iy = 0; iy < ih; iy++) {
+        for (let ix = 0; ix < iw; ix++) {
+          const ci = 4 * ((x0 + ix) + (y0 + iy) * cw);
+          const ii = 4 * (ix + iy * iw);
+
+          const r1 = pixels[ci], g1 = pixels[ci+1], b1 = pixels[ci+2];
+          const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
+
+          if (Math.abs(r1 - r2) < 30 && Math.abs(g1 - g2) < 30 && Math.abs(b1 - b2) < 30) {
+            matchCount++;
           }
         }
-        return true;
       }
-    
-      let maxScan = 50; // scan at most 50px to left/right/up
-    
-      // Left edge
-      let leftX = anchorX;
-      for (let dx = 1; dx <= maxScan; dx++) {
-        if (matchesIconAt(anchorX - dx, anchorY, statBorderData)) leftX = anchorX - dx;
-        else break;
-      }
-    
-      // Right edge
-      let rightX = anchorX + statAnchorData.width;
-      for (let dx = 1; dx <= maxScan; dx++) {
-        if (matchesIconAt(anchorX + statAnchorData.width + dx, anchorY, statBorderData)) rightX = anchorX + statAnchorData.width + dx;
-        else break;
-      }
-    
-      // Top edge
-      let topY = anchorY;
-      for (let dy = 1; dy <= maxScan; dy++) {
-        if (matchesIconAt(anchorX, anchorY - dy, statRoofData)) topY = anchorY - dy;
-        else break;
-      }
-    
-      let bottomY = anchorY + statAnchorData.height + 10; // we can refine later
-    
-      return {x: leftX, y: topY, w: rightX - leftX, h: bottomY - topY};
-    }
-    // ----------------- OCR -----------------
-    async function readStats(region) {
-      const img = a1lib.getregion(region.x, region.y, region.w, region.h);
-      if (!img) return null;
-      const result = await alt1.ocr(img);
-      return result;
+
+      return (matchCount / total) >= threshold;
     }
 
-    // ----------------- Main scanning -----------------
+    function findEdges(anchorX, anchorY, screenImg) {
+      let leftX = anchorX;
+      let rightX = anchorX + statAnchorData.width;
+      let topY = anchorY;
+      let bottomY = anchorY + statAnchorData.height + 200; // placeholder guess
+
+      // Search left (up to 500px)
+      for (let dx = 1; dx <= 500; dx++) {
+        if (matchesIconAt(anchorX - dx, anchorY, screenImg, statBorderData)) {
+          leftX = anchorX - dx;
+          break;
+        }
+      }
+
+      // Search right (up to 500px)
+      for (let dx = 1; dx <= 500; dx++) {
+        if (matchesIconAt(anchorX + statAnchorData.width + dx, anchorY, screenImg, statBorderData)) {
+          rightX = anchorX + statAnchorData.width + dx + statBorderData.width;
+          break;
+        }
+      }
+
+      // Search upward (up to 200px)
+      for (let dy = 1; dy <= 200; dy++) {
+        if (matchesIconAt(anchorX, anchorY - dy, screenImg, statRoofData)) {
+          topY = anchorY - dy;
+          break;
+        }
+      }
+
+      return {x: leftX, y: topY, w: rightX - leftX, h: bottomY - topY};
+    }
+
     function startFinder() {
-      if (!window.alt1 || !alt1.permissionPixel) {
-        setStatus("Alt1 not ready or pixel permission missing ❌", "red");
+      if (!window.alt1) {
+        setStatus("Not running in Alt1 ❌", "red");
+        return;
+      }
+      if (!alt1.permissionPixel) {
+        setStatus("Pixel permission not granted ❌", "red");
         return;
       }
 
-      const screenW = alt1.rsWidth || 0, screenH = alt1.rsHeight || 0;
-      const fullScreenImg = a1lib.getregion(0, 0, screenW, screenH);
-      if (!fullScreenImg) {
+      const screenW = alt1.rsWidth || 0;
+      const screenH = alt1.rsHeight || 0;
+      const screenImg = a1lib.getregion(0, 0, screenW, screenH);
+
+      if (!screenImg) {
         setStatus("Failed to capture screen ❌", "red");
         return;
       }
 
-      // Step 1: Find stat anchor
-      const anchorPos = matchIcon(fullScreenImg, statAnchorData);
-      if (!anchorPos) {
-        setStatus("Stat anchor not found ❌", "red");
-        return;
+      setStatus("Scanning for stat anchor…");
+
+      const match = matchIcon(screenImg, statAnchorData);
+      if (match) {
+        const absX = match.x;
+        const absY = match.y;
+        alt1.overLayRect(a1lib.mixcolor(0, 255, 0), absX, absY, statAnchorData.width, statAnchorData.height, 3000, 3);
+        setStatus(`Found stat anchor at X:${absX}, Y:${absY} ✅`);
+
+        const region = findEdges(absX, absY, screenImg);
+        alt1.overLayRect(a1lib.mixcolor(0, 0, 255), region.x, region.y, region.w, region.h, 5000, 3);
+        setStatus(`Stat window detected at X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h} ✅`);
+      } else {
+        setStatus("Could not find stat anchor ❌", "red");
       }
-
-      alt1.overLayRect(a1lib.mixcolor(0, 255, 0), anchorPos.x-5, anchorPos.y-5,
-                       statAnchorData.width+10, statAnchorData.height+10, 5000, 3);
-      setStatus(`Stat anchor found at X:${anchorPos.x}, Y:${anchorPos.y} ✅`);
-
-      // Step 2: Detect edges
-      const statRegion = findEdges(anchorPos.x, anchorPos.y, fullScreenImg);
-      alt1.overLayRect(a1lib.mixcolor(0, 0, 255), statRegion.x, statRegion.y, statRegion.w, statRegion.h, 5000, 3);
-      setStatus(`Stat window detected at X:${statRegion.x}, Y:${statRegion.y}, W:${statRegion.w}, H:${statRegion.h} ✅`);
-
-      // Step 3: OCR the region
-      readStats(statRegion).then(result => {
-        if (result) {
-          setDebug("OCR result:\n" + JSON.stringify(result, null, 2));
-          setStatus("Stats read successfully ✅");
-        } else {
-          setStatus("OCR failed ❌", "red");
-        }
-      });
     }
 
-    // ----------------- Init -----------------
-    document.getElementById("startBtn").disabled = true;
-    loadAllImages(() => {
-      setStatus("All images loaded, ready ✅");
-      document.getElementById("startBtn").disabled = false;
-    });
-    document.getElementById("startBtn").onclick = startFinder;
+    function matchIcon(screenImg, icon) {
+      const cw = screenImg.width, ch = screenImg.height;
+      for (let y = 0; y <= ch - icon.height; y++) {
+        for (let x = 0; x <= cw - icon.width; x++) {
+          if (matchesIconAt(x, y, screenImg, icon)) {
+            return {x: x, y: y};
+          }
+        }
+      }
+      return null;
+    }
   </script>
 </body>
 </html>
