@@ -1,195 +1,184 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"><title>RS3 Stats Detector v1.65</title>
-<link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
-<script src="https://runeapps.org/alt1lib.js"></script>
-<script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
-<style>
-  #status{margin-top:10px;font-weight:bold;color:lime}
-  #debug{margin-top:10px;font-size:12px;white-space:pre-line;color:#ccc}
-  #version{margin-top:5px;font-size:12px;color:gray}
-</style>
-</head><body class="nis">
-  <div class="nismainborder nisborder" style="padding:20px;position:relative;">
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RS3 Stats Detector v1.5</title>
+  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
+  <script src="https://runeapps.org/alt1lib.js"></script>
+  <script src="https://www.unpkg.com/alt1/dist/ocr/index.js"></script>
+  <style>
+    #status { margin-top: 10px; font-weight: bold; color: lime; }
+    #debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
+    #version { margin-top: 5px; font-size: 12px; color: gray; }
+  </style>
+</head>
+<body class="nis">
+  <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
     <h2>RS3 Stats Detector</h2>
     <button onclick="loadAssets()">Start Stats Finder</button>
     <div id="status">Waiting…</div>
     <div id="debug"></div>
-    <div id="version">Build v1.65 (stable-run edges + speed)</div>
+    <div id="version">Build v1.5 (better left/right detection)</div>
   </div>
 
-<script>
-let statAnchorData=null, statBorderData=null, statRoofData=null;
+  <script>
+    let statAnchorData = null, statBorderData = null, statRoofData = null;
 
-function setStatus(msg,color="lime"){const el=document.getElementById("status");el.innerText=msg;el.style.color=color;console.log(msg);}
-function setDebug(msg){document.getElementById("debug").innerText=msg;console.log("DEBUG:",msg);}
+    function setStatus(msg, color = "lime") {
+      const el = document.getElementById("status");
+      el.innerText = msg;
+      el.style.color = color;
+      console.log(msg);
+    }
 
-function loadImage(path,callback){
-  const img=new Image();
-  img.src=path;
-  img.onload=()=>{const c=document.createElement("canvas");c.width=img.width;c.height=img.height;const ctx=c.getContext("2d");ctx.drawImage(img,0,0);callback(ctx.getImageData(0,0,img.width,img.height));};
-  img.onerror=()=>setStatus(`Failed to load ${path} ❌`,"red");
-}
+    function setDebug(msg) {
+      document.getElementById("debug").innerText = msg;
+      console.log("DEBUG:", msg);
+    }
 
-function loadAssets(){
-  loadImage("./statanchor.png",d=>{
-    statAnchorData=d;
-    loadImage("./statborder.png",d2=>{
-      statBorderData=d2;
-      loadImage("./statroof.png",d3=>{
-        statRoofData=d3;
-        startFinder();
+    function loadImage(path, callback) {
+      const img = new Image();
+      img.src = path;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        callback(ctx.getImageData(0, 0, img.width, img.height));
+      };
+      img.onerror = () => setStatus(`Failed to load ${path} ❌`, "red");
+    }
+
+    function loadAssets() {
+      loadImage("./statanchor.png", data => {
+        statAnchorData = data;
+        loadImage("./statborder.png", data2 => {
+          statBorderData = data2;
+          loadImage("./statroof.png", data3 => {
+            statRoofData = data3;
+            startFinder();
+          });
+        });
       });
-    });
-  });
-}
-
-// Per-pixel similarity check with threshold (kept high for borders)
-function matchesIconAt(x0,y0,screenImg,icon,threshold=0.95){
-  const iw=icon.width, ih=icon.height;
-  const iconPixels=icon.data;
-  const cw=screenImg.width, ch=screenImg.height;
-  const pixels=screenImg.data;
-  if(x0<0||y0<0||x0+iw>cw||y0+ih>ch) return false;
-  let matchCount=0, total=iw*ih;
-  for(let iy=0; iy<ih; iy++){
-    for(let ix=0; ix<iw; ix++){
-      const ci=4*((x0+ix)+(y0+iy)*cw);
-      const ii=4*(ix+iy*iw);
-      const r1=pixels[ci], g1=pixels[ci+1], b1=pixels[ci+2];
-      const r2=iconPixels[ii], g2=iconPixels[ii+1], b2=iconPixels[ii+2];
-      if(Math.abs(r1-r2)<30 && Math.abs(g1-g2)<30 && Math.abs(b1-b2)<30) matchCount++;
-    }
-  }
-  return (matchCount/total) >= threshold;
-}
-
-// Robust "first stable-run" edge finder (scans outward, requires a run of consecutive x positions that pass)
-function findEdgeStable(anchorX,anchorY,screenImg,direction){
-  const maxRange = (direction==="left"||direction==="right")?500:200;
-  const verticalSpan = 50;   // +/- vertical offset scanned
-  const stepX = 2;           // step horizontally (speed)
-  const stepY = 3;           // step vertically (speed)
-  const minScore = 0.6;      // fraction of vertical offsets that must match
-  const runThreshold = 3;    // require this many consecutive x positions meeting minScore
-  const icon = (direction==="up")?statRoofData:statBorderData;
-
-  // Helper: compute score at candidateX (how many vertical offsets match)
-  function scoreAt(cx){
-    let matches=0, total=0;
-    for(let oy=-verticalSpan; oy<=verticalSpan; oy+=stepY){
-      total++;
-      if(matchesIconAt(cx, anchorY + oy, screenImg, icon, direction==="up"?0.9:0.95)) matches++;
-    }
-    return matches/total;
-  }
-
-  let runCount = 0, firstRunDist = null;
-  // scan outward from distance = 1 to maxRange
-  for(let d=1; d<=maxRange; d+=stepX){
-    let candidateX;
-    if(direction==="left") candidateX = anchorX - d;
-    else if(direction==="right") candidateX = anchorX + statAnchorData.width + d;
-    else candidateX = anchorX; // 'up' will use candidateY by d below
-
-    if(direction!=="up" && (candidateX < 0 || candidateX > screenImg.width - icon.width)) {
-      runCount = 0; continue;
     }
 
-    // For up, we test Y shifts rather than different X; but we keep the same scoring approach.
-    let score;
-    if(direction==="up"){
-      // candidateY = anchorY - d
-      if(anchorY - d < 0) break;
-      score = 0;
-      // test across a horizontal band (small horizontal span) to ensure roof aligns
-      const horizSpan = 10;
-      let matches=0, total=0;
-      for(let ox=-horizSpan; ox<=horizSpan; ox+=stepY){
-        total++;
-        if(matchesIconAt(anchorX + ox, anchorY - d, screenImg, icon, 0.9)) matches++;
-      }
-      score = matches/total;
-    } else {
-      score = scoreAt(candidateX);
-    }
+    function matchesIconAt(x0, y0, screenImg, icon, threshold = 0.9) {
+      const iw = icon.width, ih = icon.height;
+      const iconPixels = icon.data;
+      const cw = screenImg.width, ch = screenImg.height;
+      const pixels = screenImg.data;
 
-    // If this candidate meets minScore -> part of a run
-    if(score >= minScore){
-      runCount++;
-      if(firstRunDist === null) firstRunDist = d;
-      if(runCount >= runThreshold){
-        // Confirmed first stable run: compute the edge coordinate at the start of the run
-        const startDist = firstRunDist;
-        if(direction==="left"){
-          const edgeX = anchorX - startDist;
-          return {x:edgeX, y: anchorY, dist: startDist, score: score};
-        } else if(direction==="right"){
-          const edgeX = anchorX + statAnchorData.width + startDist;
-          return {x:edgeX, y: anchorY, dist: startDist, score: score};
-        } else { // up
-          const edgeY = anchorY - startDist;
-          return {x: anchorX, y:edgeY, dist:startDist, score:score};
+      if (x0 < 0 || y0 < 0 || x0 + iw > cw || y0 + ih > ch) return false;
+
+      let matchCount = 0, total = iw * ih;
+
+      for (let iy = 0; iy < ih; iy++) {
+        for (let ix = 0; ix < iw; ix++) {
+          const ci = 4 * ((x0 + ix) + (y0 + iy) * cw);
+          const ii = 4 * (ix + iy * iw);
+
+          const r1 = pixels[ci], g1 = pixels[ci+1], b1 = pixels[ci+2];
+          const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
+
+          if (Math.abs(r1 - r2) < 30 && Math.abs(g1 - g2) < 30 && Math.abs(b1 - b2) < 30) {
+            matchCount++;
+          }
         }
       }
-    } else {
-      // break run on low score
-      runCount = 0;
-      firstRunDist = null;
+
+      return (matchCount / total) >= threshold;
     }
-  }
-  return null;
-}
 
-// Top-level edges aggregator (bottom fixed to anchor bottom)
-function findEdges(anchorX,anchorY,screenImg){
-  let leftX = anchorX;
-  let rightX = anchorX + statAnchorData.width;
-  let topY = anchorY;
-  let bottomY = anchorY + statAnchorData.height;
+    function findEdge(anchorX, anchorY, screenImg, direction) {
+      const range = (direction === "left" || direction === "right") ? 500 : 200;
+      const verticalSpan = 50; // scan +/- 50px vertically around anchor
+      let bestMatch = null;
 
-  const left = findEdgeStable(anchorX,anchorY,screenImg,"left");
-  const right = findEdgeStable(anchorX,anchorY,screenImg,"right");
-  const top = findEdgeStable(anchorX,anchorY,screenImg,"up");
+      for (let d = 1; d <= range; d++) {
+        for (let offsetY = -verticalSpan; offsetY <= verticalSpan; offsetY++) {
+          let testX = anchorX;
+          let testY = anchorY + offsetY;
 
-  if(left) leftX = left.x;
-  if(right) rightX = right.x + statBorderData.width;
-  if(top) topY = top.y;
+          if (direction === "left") testX = anchorX - d;
+          if (direction === "right") testX = anchorX + statAnchorData.width + d;
+          if (direction === "up") testY = anchorY - d;
 
-  return {x:leftX,y:topY,w:Math.max(8, rightX-leftX),h:Math.max(8, bottomY-topY)};
-}
+          const threshold = (direction === "up") ? 0.9 : 0.95; // stricter for borders
+          if (matchesIconAt(testX, testY, screenImg, direction === "up" ? statRoofData : statBorderData, threshold)) {
+            bestMatch = {x: testX, y: testY, dist: d};
+          }
+        }
+      }
 
-// Anchor matching (dense search — accurate)
-function matchIcon(screenImg,icon){
-  const cw=screenImg.width, ch=screenImg.height;
-  for(let y=0; y<=ch-icon.height; y++){
-    for(let x=0; x<=cw-icon.width; x++){
-      if(matchesIconAt(x,y,screenImg,icon,0.95)) return {x:x,y:y};
+      return bestMatch;
     }
-  }
-  return null;
-}
 
-function startFinder(){
-  if(!window.alt1){ setStatus("Not running in Alt1 ❌","red"); return; }
-  if(!alt1.permissionPixel){ setStatus("Pixel permission not granted ❌","red"); return; }
+    function findEdges(anchorX, anchorY, screenImg) {
+      let leftX = anchorX;
+      let rightX = anchorX + statAnchorData.width;
+      let topY = anchorY;
+      let bottomY = anchorY + statAnchorData.height; // fixed to anchor bottom
 
-  const screenW = alt1.rsWidth||0, screenH = alt1.rsHeight||0;
-  const screenImg = a1lib.getregion(0,0,screenW,screenH);
-  if(!screenImg){ setStatus("Failed to capture screen ❌","red"); return; }
+      const left = findEdge(anchorX, anchorY, screenImg, "left");
+      const right = findEdge(anchorX, anchorY, screenImg, "right");
+      const top = findEdge(anchorX, anchorY, screenImg, "up");
 
-  setStatus("Scanning for stat anchor…");
-  const match = matchIcon(screenImg, statAnchorData);
-  if(!match){ setStatus("Could not find stat anchor ❌","red"); return; }
+      if (left) leftX = left.x;
+      if (right) rightX = right.x + statBorderData.width;
+      if (top) topY = top.y;
 
-  const absX = match.x, absY = match.y;
-  alt1.overLayRect(a1lib.mixcolor(0,255,0), absX, absY, statAnchorData.width, statAnchorData.height, 3000, 3);
-  setStatus(`Found stat anchor at X:${absX}, Y:${absY} ✅`);
+      return {x: leftX, y: topY, w: rightX - leftX, h: bottomY - topY};
+    }
 
-  const region = findEdges(absX, absY, screenImg);
-  alt1.overLayRect(a1lib.mixcolor(0,0,255), region.x, region.y, region.w, region.h, 5000, 3);
-  setDebug(`Region calc → X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h}`);
-  setStatus(`Stat window detected at X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h} ✅`);
-}
-</script>
-</body></html>
+    function startFinder() {
+      if (!window.alt1) {
+        setStatus("Not running in Alt1 ❌", "red");
+        return;
+      }
+      if (!alt1.permissionPixel) {
+        setStatus("Pixel permission not granted ❌", "red");
+        return;
+      }
+
+      const screenW = alt1.rsWidth || 0;
+      const screenH = alt1.rsHeight || 0;
+      const screenImg = a1lib.getregion(0, 0, screenW, screenH);
+
+      if (!screenImg) {
+        setStatus("Failed to capture screen ❌", "red");
+        return;
+      }
+
+      setStatus("Scanning for stat anchor…");
+
+      const match = matchIcon(screenImg, statAnchorData);
+      if (match) {
+        const absX = match.x;
+        const absY = match.y;
+        alt1.overLayRect(a1lib.mixcolor(0, 255, 0), absX, absY, statAnchorData.width, statAnchorData.height, 3000, 3);
+        setStatus(`Found stat anchor at X:${absX}, Y:${absY} ✅`);
+
+        const region = findEdges(absX, absY, screenImg);
+        alt1.overLayRect(a1lib.mixcolor(0, 0, 255), region.x, region.y, region.w, region.h, 5000, 3);
+        setDebug(`Region calc → X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h}`);
+        setStatus(`Stat window detected at X:${region.x}, Y:${region.y}, W:${region.w}, H:${region.h} ✅`);
+      } else {
+        setStatus("Could not find stat anchor ❌", "red");
+      }
+    }
+
+    function matchIcon(screenImg, icon) {
+      const cw = screenImg.width, ch = screenImg.height;
+      for (let y = 0; y <= ch - icon.height; y++) {
+        for (let x = 0; x <= cw - icon.width; x++) {
+          if (matchesIconAt(x, y, screenImg, icon)) {
+            return {x: x, y: y};
+          }
+        }
+      }
+      return null;
+    }
+  </script>
+</body>
+</html>
