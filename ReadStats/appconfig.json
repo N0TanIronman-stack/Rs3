@@ -12,4 +12,5 @@
   "requestHandlers": [],
   "activators": [],
   "permissions": "pixel,gamestate,overlay"
+  "permissions": ["pixel"]
 }
