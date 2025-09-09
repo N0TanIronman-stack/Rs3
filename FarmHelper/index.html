@@ -84,18 +84,16 @@
     <header style="display: flex; justify-content: center; position: sticky; top: 0; z-index: 1000; flex-shrink: 0">
         <!-- If website is in desktop mode -->
         <nav class="nis desktop">
+          <Div>
             <button class="nisbutton nissmallbutton" onclick="showPage('page1')">Home</button>
             <button class="nisbutton nissmallbutton" onclick="showPage('page2')">Herb Runs</button>
             <button class="nisbutton nissmallbutton" onclick="showPage('page3')">Tree Runs</button>
             <button class="nisbutton nissmallbutton" onclick="showPage('page4')">Fruit Tree Runs</button>
             <button class="nisbutton nissmallbutton" onclick="showPage('page5')">Bush Runs</button>
             <button class="nisbutton nissmallbutton" onclick="showPage('page6')">⚙ Settings</button>
-
-            <!-- Farming Input -->
-            <div>
-                <input type="text" class="nisinput" placeholder="Farming Level" style="width: 100px;">
-                <button class="nisbutton2">Submit</button>
-            </div>
+            <input type="text" class="nisinput" placeholder="Farming Level" style="width: 100px;">
+            <button class="nisbutton2">Submit</button>
+          </div>
         </nav>
 
         <div class="hamburger" onclick="toggleMenu()">
@@ -694,7 +692,7 @@
                             	<p>OR</p>
                               <li>
                                 <div style="display: inline-block;">Taverley Lodestone</div>
-                                <img class="icon" src="https://runescape.wiki/images/Falador_lodestone_icon.png" />
+                                <img class="icon" src="https://runescape.wiki/images/Taverley_lodestone_icon.png" />
                             </li>
                           </ul>
                       </li>
@@ -784,22 +782,526 @@
 
             <!-- Page 4 -Fruit Tree Runs -->
             <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page4">
-                <h1>Fruit Tree Runs</h1>
-                <!-- Buttons at Bottom -->
-                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
-                    <button class="nisbutton nissmallbutton">Previous</button>
-                    <button class="nisbutton nissmallbutton">Next</button>
-                </div>
+                <ul> 
+                  <li>
+                    <h1 class="Area">Fruit Tree Runs</h1>
+                    <p>I like to do fruit tree runs right after I finish my herb run.</p>
+                  </li>
+                </ul>
+
+                  <!-- Catherby-->
+                  <ul>
+                      <li data-min="27" title="Start here after Herb runs, since you'll already be here." data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Catherby</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;">Camelot Teleport</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Lumbridge_Teleport_icon.png" />
+                                  <ul>
+                                      <!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">5 Air Runes</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Air_rune.png" />
+                                      </li>
+                                    	<!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Law Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Law_rune.png" />
+                                      </li>
+                                  </ul>
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Catherby Lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Catherby_lodestone_icon.png" />
+                            </li>
+                            <p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Gnome Glider (Option 2)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Lletya-->
+                  <ul>
+                      <li data-min="27" title="They'll Lletya plant here." data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Lletya</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;"title="Option 1">Attuned Crystal Teleport Seed (Option 1)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Attuned_crystal_teleport_seed.png" />
+                                <img class="icon" src="https://runescape.wiki/images/Crystal_teleport_seed.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Tirannwn Quiver</div>
+                                <img class="icon" src="https://runescape.wiki/images/Tirannwn_quiver_1.png" />
+                            	</li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Charter Ship (Port Tyras)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Sarim's_Revenge.png" />
+                            	</li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Tirannwn Lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Tirannwn_lodestone_icon.png" />
+                            	</li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Prifddinas-->
+                  <ul>
+                      <li data-min="75" title="Meilyr Clan, big fan." data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Prifddinas</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;"title="Option 8/9">Attuned Crystal Teleport Seed (Option 8/9)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Attuned_crystal_teleport_seed.png" title="Shiny"/>
+                                <img class="icon" src="https://runescape.wiki/images/Crystal_teleport_seed.png" title="Sparkly"/>
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Tirannwn Quiver</div>
+                                <img class="icon" src="https://runescape.wiki/images/Tirannwn_quiver_4.png" />
+                            	</li>
+                            <p>OR</p>
+                              <li>
+                                <div style="display: inline-block;" title = "Requires 99 Dungeoneering, Option (0,0,1)">Dungeoneering Cape (Option 0,0,1)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Dungeoneering_cape.png" title = "Thok it to em'"/>
+																<img class="icon" src="https://runescape.wiki/images/Dungeoneering_master_cape.png" title = "Best 120 cape, hand's down."/>
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Tree Gnome Stronghold-->
+                  <ul>
+                      <li data-min="27" title="Druidic Digging" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Tree Gnome Stronghold</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;">Spirit Tree (Option 2)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Spirit_tree.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Gnome Glider (Option 1)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                            	</li>
+                            	<p>OR</p>
+                            	<li>
+                                <div style="display: inline-block;">Grand Seed Pod</div>
+                                <img class="icon" src="https://runescape.wiki/images/Grand_seed_pod.png" />
+                            	</li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Tree Gnome Village-->
+                  <ul>
+                      <li data-min="27" title="It takes a village...'" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Tree Gnome Stronghold</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li title="That's the Spirit!">
+                                  <div style="display: inline-block;">Spirit Tree (option 1)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Spirit_tree.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li  title = "Option 7">
+                                <div style="display: inline-block;"title="After Prisoner of Glouphrie">Gnome Glider (Option 7)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                            </li>
+                            <p>OR</p>
+                              <li title="C I Q">
+                                <div style="display: inline-block;">Fairy Ring (C I Q)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Fairy_ring.png"/>
+                            </li>
+                            <p>OR</p>
+                              <li title="Requires easy Kandarin achievements">
+                                <div style="display: inline-block;">Kandarin Monestary Teleport</div>
+                                <img class="icon" src="https://runescape.wiki/images/Kandarin_monastery_Teleport_icon.png"/>
+                            </li>
+                            <p>OR</p>
+                              <li title="">
+                                <div style="display: inline-block;">Yanille Lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Yanille_lodestone_icon.png"/>
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+              		<!-- Brimhaven -->
+                  <ul>
+                      <li data-min="27" title="" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Brimhaven</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li title="Needs to be planted, Option 8">
+                                  <div style="display: inline-block;">Spirit Tree (option 8)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Spirit_tree.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li  title = "Option 7">
+                                <div style="display: inline-block;">Karamja lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Karamja_lodestone_icon.png" />
+                            </li>
+                            <p>OR</p>
+                              <li title="">
+                                <div style="display: inline-block;">Charter Ship</div>
+                                <img class="icon" src="https://runescape.wiki/images/Sarim's_Revenge.png"/>
+                            </li>
+                            <p>OR</p>
+                              <li title="">
+                                <div style="display: inline-block;">House Teleport</div>
+                                <img class="icon" src="https://runescape.wiki/images/House_Teleport_icon.png"/>
+                                <ul>
+                                      <!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Air Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Air_rune.png" />
+                                      </li>
+                                    	<!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Earth Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Earth_rune.png" />
+                                      </li>
+                                      <!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Law Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Law_rune.png" />
+                                      </li>
+                                  </ul>
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+              		<!-- Herblore Habitat -->
+                  <ul>
+                      <li data-min="27" title="You can use stored juju bags with Master Farmer Hat" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Herblore Habitat</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                            	<li title="Buy in Taverley for 2k gp">
+                                <div style="display: inline-block;">Juju Teleport Spiritbag</div>
+                                <img class="icon" src="https://runescape.wiki/images/Juju_teleport_spiritbag.png" />
+                                <img class="icon" src="https://runescape.wiki/images/Master_farmer_hat.png" />
+                              </li>
+                              <p>OR</p>
+                              <li title="Option 5">
+                                <div style="display: inline-block;">Gnome Glider (Option 5)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li  title = "C J S">
+                                <div style="display: inline-block;">Witchdoctor Mask</div>
+                                <img class="icon" src="https://runescape.wiki/images/Witchdoctor_mask.png"/>
+                              </li>
+                              <p>OR</p>
+                              <li  title = "C J S">
+                                <div style="display: inline-block;">Fairy Ring (C J S)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Fairy_ring.png"/>
+                              </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+              
+                      <!-- Buttons at Bottom -->
+                      <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
+                          <button class="nisbutton nissmallbutton prev-btn">Previous</button>
+                          <button class="nisbutton nissmallbutton next-btn">Next</button>
+                      </div>
             </div>
 
-            <!-- Page 5 -Bush Runs -->
+            <!-- Page 4 -Bush Runs -->
             <div class="scrollable-content" style="flex-grow: 1; overflow-y: scroll; padding: 20px;" id="page5">
-                <h1>Bush Runs</h1>
-                <!-- Buttons at Bottom -->
-                <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
-                    <button class="nisbutton nissmallbutton">Previous</button>
-                    <button class="nisbutton nissmallbutton">Next</button>
-                </div>
+                <ul> 
+                  <li>
+                    <h1 class="Area">Bush Runs</h1>
+                    <p>I like to do fruit tree runs right after I finish my herb run.</p>
+                  </li>
+                </ul>
+
+                  <!-- Catherby-->
+                  <ul>
+                      <li data-min="27" title="Start here after Herb runs, since you'll already be here." data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Catherby</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;">Camelot Teleport</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Lumbridge_Teleport_icon.png" />
+                                  <ul>
+                                      <!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">5 Air Runes</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Air_rune.png" />
+                                      </li>
+                                    	<!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Law Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Law_rune.png" />
+                                      </li>
+                                  </ul>
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Catherby Lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Catherby_lodestone_icon.png" />
+                            </li>
+                            <p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Gnome Glider (Option 2)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Lletya-->
+                  <ul>
+                      <li data-min="27" title="They'll Lletya plant here." data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Lletya</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;"title="Option 1">Attuned Crystal Teleport Seed (Option 1)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Attuned_crystal_teleport_seed.png" />
+                                <img class="icon" src="https://runescape.wiki/images/Crystal_teleport_seed.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Tirannwn Quiver</div>
+                                <img class="icon" src="https://runescape.wiki/images/Tirannwn_quiver_1.png" />
+                            	</li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Charter Ship (Port Tyras)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Sarim's_Revenge.png" />
+                            	</li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Tirannwn Lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Tirannwn_lodestone_icon.png" />
+                            	</li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Prifddinas-->
+                  <ul>
+                      <li data-min="75" title="Meilyr Clan, big fan." data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Prifddinas</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;"title="Option 8/9">Attuned Crystal Teleport Seed (Option 8/9)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Attuned_crystal_teleport_seed.png" title="Shiny"/>
+                                <img class="icon" src="https://runescape.wiki/images/Crystal_teleport_seed.png" title="Sparkly"/>
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Tirannwn Quiver</div>
+                                <img class="icon" src="https://runescape.wiki/images/Tirannwn_quiver_4.png" />
+                            	</li>
+                            <p>OR</p>
+                              <li>
+                                <div style="display: inline-block;" title = "Requires 99 Dungeoneering, Option (0,0,1)">Dungeoneering Cape (Option 0,0,1)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Dungeoneering_cape.png" title = "Thok it to em'"/>
+																<img class="icon" src="https://runescape.wiki/images/Dungeoneering_master_cape.png" title = "Best 120 cape, hand's down."/>
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Tree Gnome Stronghold-->
+                  <ul>
+                      <li data-min="27" title="Druidic Digging" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Tree Gnome Stronghold</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li>
+                                  <div style="display: inline-block;">Spirit Tree (Option 2)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Spirit_tree.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li>
+                                <div style="display: inline-block;">Gnome Glider (Option 1)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                            	</li>
+                            	<p>OR</p>
+                            	<li>
+                                <div style="display: inline-block;">Grand Seed Pod</div>
+                                <img class="icon" src="https://runescape.wiki/images/Grand_seed_pod.png" />
+                            	</li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+                  <!-- Tree Gnome Village-->
+                  <ul>
+                      <li data-min="27" title="It takes a village...'" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Tree Gnome Stronghold</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li title="That's the Spirit!">
+                                  <div style="display: inline-block;">Spirit Tree (option 1)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Spirit_tree.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li  title = "Option 7">
+                                <div style="display: inline-block;"title="After Prisoner of Glouphrie">Gnome Glider (Option 7)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                            </li>
+                            <p>OR</p>
+                              <li title="C I Q">
+                                <div style="display: inline-block;">Fairy Ring (C I Q)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Fairy_ring.png"/>
+                            </li>
+                            <p>OR</p>
+                              <li title="Requires easy Kandarin achievements">
+                                <div style="display: inline-block;">Kandarin Monestary Teleport</div>
+                                <img class="icon" src="https://runescape.wiki/images/Kandarin_monastery_Teleport_icon.png"/>
+                            </li>
+                            <p>OR</p>
+                              <li title="">
+                                <div style="display: inline-block;">Yanille Lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Yanille_lodestone_icon.png"/>
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+              		<!-- Brimhaven -->
+                  <ul>
+                      <li data-min="27" title="" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Brimhaven</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                              <li title="Needs to be planted, Option 8">
+                                  <div style="display: inline-block;">Spirit Tree (option 8)</div>
+                                  <img class="icon" src="https://runescape.wiki/images/Spirit_tree.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li  title = "Option 7">
+                                <div style="display: inline-block;">Karamja lodestone</div>
+                                <img class="icon" src="https://runescape.wiki/images/Karamja_lodestone_icon.png" />
+                            </li>
+                            <p>OR</p>
+                              <li title="">
+                                <div style="display: inline-block;">Charter Ship</div>
+                                <img class="icon" src="https://runescape.wiki/images/Sarim's_Revenge.png"/>
+                            </li>
+                            <p>OR</p>
+                              <li title="">
+                                <div style="display: inline-block;">House Teleport</div>
+                                <img class="icon" src="https://runescape.wiki/images/House_Teleport_icon.png"/>
+                                <ul>
+                                      <!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Air Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Air_rune.png" />
+                                      </li>
+                                    	<!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Earth Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Earth_rune.png" />
+                                      </li>
+                                      <!-- Break -->
+                                      <br>
+                                      <li>
+                                          <div style="display: inline-block;">1 Law Rune</div>
+                                          <img class="icon" src="https://runescape.wiki/images/Law_rune.png" />
+                                      </li>
+                                  </ul>
+                            </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+              		<!-- Herblore Habitat -->
+                  <ul>
+                      <li data-min="27" title="You can use stored juju bags with Master Farmer Hat" data-hidden-title="Requires 27 Farming to plant Apple Trees">
+                          <div class="Area">Herblore Habitat</div>
+                          <ul>
+                              <!-- Break -->
+                              <br>
+                            	<li title="Buy in Taverley for 2k gp">
+                                <div style="display: inline-block;">Juju Teleport Spiritbag</div>
+                                <img class="icon" src="https://runescape.wiki/images/Juju_teleport_spiritbag.png" />
+                                <img class="icon" src="https://runescape.wiki/images/Master_farmer_hat.png" />
+                              </li>
+                              <p>OR</p>
+                              <li title="Option 5">
+                                <div style="display: inline-block;">Gnome Glider (Option 5)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Gnome_glider.png" />
+                              </li>
+                            	<p>OR</p>
+                              <li  title = "C J S">
+                                <div style="display: inline-block;">Witchdoctor Mask</div>
+                                <img class="icon" src="https://runescape.wiki/images/Witchdoctor_mask.png"/>
+                              </li>
+                              <p>OR</p>
+                              <li  title = "C J S">
+                                <div style="display: inline-block;">Fairy Ring (C J S)</div>
+                                <img class="icon" src="https://runescape.wiki/images/Fairy_ring.png"/>
+                              </li>
+                          </ul>
+                      </li>
+                  </ul>
+                  <!-- Break -->
+                  <br>
+              
+                      <!-- Buttons at Bottom -->
+                      <div class="button-row" style="display: flex;justify-content: center; ; position: fixed;right: 14px; left: 4px; bottom: 4px; background-color: #161e33; z-index: 1000;">
+                          <button class="nisbutton nissmallbutton prev-btn">Previous</button>
+                          <button class="nisbutton nissmallbutton next-btn">Next</button>
+                      </div>
             </div>
 
             <!-- Page 6 -Settings -->
@@ -885,7 +1387,7 @@
             });
         
             //Show default page on load
-            window.onload = () => showPage('page3');
+            window.onload = () => showPage('page4');
           
           	//Load original titles
             listItems.forEach(li => {
