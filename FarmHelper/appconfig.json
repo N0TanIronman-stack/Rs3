@@ -4,7 +4,7 @@
   "appurl": "./index.html",
   "iconUrl": "./Farming_detail.png",
   "defaultWidth": 283,
-  "defaultHeight": 283,
+  "defaultHeight": 420,
   "minWidth":283,
   "minHeight":283,
   "maxWidth":283,
