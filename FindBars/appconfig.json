@@ -1,6 +1,6 @@
 {
   "appname": "FindBars",
-  "description": "A tool to read the user's stats; Used for other apps",
+  "description": "A tool to find the user's Ability Bars; Used for other apps",
   "appurl": "./FindBars.html",
   "iconUrl": "./AbilityBarHeader.png",
   "defaultWidth": 283,
