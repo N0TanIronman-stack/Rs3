@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Anchor Finder (fast)</title>
+  <title>RS3 Stats Anchor Finder (multi)</title>
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
     #status { margin-top: 10px; font-weight: bold; color: lime; }
@@ -10,8 +10,8 @@
   </style>
 </head>
 <body>
-  <h2>Anchor Finder Fast Test</h2>
-  <button onclick="loadAssets()">Scan Anchors Fast</button>
+  <h2>Anchor Finder Multi-Test</h2>
+  <button onclick="loadAssets()">Scan All Anchors</button>
   <div id="status">Waiting…</div>
   <div id="debug"></div>
 
@@ -31,7 +31,7 @@
 
     function loadImageData(path, callback) {
       const img = new Image();
-      img.crossOrigin = "anonymous";   // might help if image loaded from another origin
+      img.crossOrigin = "anonymous";
       img.src = path;
       img.onload = () => {
         const canvas = document.createElement("canvas");
@@ -39,22 +39,41 @@
         canvas.height = img.height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0);
-        const imgData = ctx.getImageData(0, 0, img.width, img.height);
-        callback(imgData);
+        callback(ctx.getImageData(0, 0, img.width, img.height));
       };
-      img.onerror = (e) => {
-        setStatus(`Failed to load image ${path}`, "red");
-        console.error(e);
-      };
+      img.onerror = () => setStatus(`Failed to load ${path}`, "red");
     }
 
     function loadAssets() {
       loadImageData("./statanchor.png", data => {
         statAnchorData = data;
         setStatus("Anchor image loaded");
-        // Maybe small delay to ensure everything bound
         setTimeout(startFinder, 100);
       });
+    }
+
+    // Fallback loop if native multi-match not available
+    function findAllMatches(screenImg, icon, tolerance = 35) {
+      let results = [];
+      let temp = screenImg;
+
+      while (true) {
+        let match = a1lib.findSubImage(temp, icon, tolerance);
+        if (!match) break;
+
+        results.push(match);
+
+        // mask the found region to avoid repeat match
+        const canvas = document.createElement("canvas");
+        canvas.width = temp.width;
+        canvas.height = temp.height;
+        const ctx = canvas.getContext("2d");
+        ctx.putImageData(temp, 0, 0);
+        ctx.fillStyle = "black";
+        ctx.fillRect(match.x, match.y, icon.width, icon.height);
+        temp = ctx.getImageData(0, 0, temp.width, temp.height);
+      }
+      return results;
     }
 
     function startFinder() {
@@ -73,51 +92,55 @@
 
       const screenW = alt1.rsWidth || 0;
       const screenH = alt1.rsHeight || 0;
-      if (screenW === 0 || screenH === 0) {
-        setStatus("Invalid screen dimensions ❌", "red");
-        return;
-      }
-
       const screenImg = a1lib.getregion(0, 0, screenW, screenH);
       if (!screenImg) {
-        setStatus("Failed to capture screen region ❌", "red");
+        setStatus("Failed to capture screen ❌", "red");
         return;
       }
 
-      setStatus("Running fast scan…");
+      setStatus("Scanning for all anchors…");
 
-      // Use native findSubImage (or findsubimg depending on version)
       let matches = null;
+
       try {
-        // Try both names if unsure
+        // Check if API supports multi-match flag
         if (typeof a1lib.findSubImage === "function") {
-          matches = a1lib.findSubImage(screenImg, statAnchorData, 35);
+          matches = a1lib.findSubImage(screenImg, statAnchorData, 35, true);
         } else if (typeof a1lib.findsubimg === "function") {
-          matches = a1lib.findsubimg(screenImg, statAnchorData, 35);
-        } else {
-          throw new Error("No findSubImage / findsubimg function found");
+          matches = a1lib.findsubimg(screenImg, statAnchorData, 35, true);
         }
-      } catch (err) {
-        setStatus("Error calling findSubImage", "red");
-        console.error(err);
-        return;
+      } catch (e) {
+        console.warn("Native multi-match failed, falling back", e);
       }
 
-      if (!matches) {
-        setStatus("No matches (returned null/undefined)", "red");
-      } else if (Array.isArray(matches) && matches.length > 0) {
+      // Fallback if we only got a single object or null
+      if (!matches || (!Array.isArray(matches) && !matches.length)) {
+        matches = findAllMatches(screenImg, statAnchorData, 35);
+      }
+
+      if (Array.isArray(matches) && matches.length > 0) {
         setStatus(`Found ${matches.length} anchors ✅`);
         matches.forEach(m => {
           alt1.overLayRect(
-            a1lib.mixcolor(0,255,0),
+            a1lib.mixcolor(0, 255, 0),
             m.x, m.y,
             statAnchorData.width, statAnchorData.height,
             3000, 3
           );
         });
         setDebug(JSON.stringify(matches, null, 2));
+      } else if (matches && matches.x !== undefined) {
+        // single object
+        setStatus("Found 1 anchor ✅");
+        alt1.overLayRect(
+          a1lib.mixcolor(0, 255, 0),
+          matches.x, matches.y,
+          statAnchorData.width, statAnchorData.height,
+          3000, 3
+        );
+        setDebug(JSON.stringify(matches, null, 2));
       } else {
-        setStatus("Matches array empty ❌", "red");
+        setStatus("No anchors found ❌", "red");
       }
     }
   </script>
