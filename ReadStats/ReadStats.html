@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RS3 Stats Anchor Finder</title>
+  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
+  <script src="https://runeapps.org/alt1lib.js"></script>
+  <style>
+    #status { margin-top: 10px; font-weight: bold; color: lime; }
+    #debug { margin-top: 10px; font-size: 12px; white-space: pre-line; color: #ccc; }
+  </style>
+</head>
+<body class="nis">
+  <div class="nismainborder nisborder" style="padding: 20px; position: relative;">
+    <h2>RS3 Stats Anchor Finder</h2>
+    <button onclick="loadAssets()">Scan for Anchors</button>
+    <div id="status">Waiting…</div>
+    <div id="debug"></div>
+  </div>
+
+  <script>
+    let statAnchorData = null;
+
+    function setStatus(msg, color = "lime") {
+      const el = document.getElementById("status");
+      el.innerText = msg;
+      el.style.color = color;
+      console.log(msg);
+    }
+
+    function setDebug(msg) {
+      document.getElementById("debug").innerText = msg;
+      console.log("DEBUG:", msg);
+    }
+
+    function loadImage(path, callback) {
+      const img = new Image();
+      img.src = path;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        callback(ctx.getImageData(0, 0, img.width, img.height));
+      };
+      img.onerror = () => setStatus(`Failed to load ${path} ❌`, "red");
+    }
+
+    function loadAssets() {
+      loadImage("./statanchor.png", data => {
+        statAnchorData = data;
+        startFinder();
+      });
+    }
+
+    function matchesIconAt(x0, y0, screenImg, icon, threshold = 0.9) {
+      const iw = icon.width, ih = icon.height;
+      const iconPixels = icon.data;
+      const cw = screenImg.width, ch = screenImg.height;
+      const pixels = screenImg.data;
+
+      if (x0 < 0 || y0 < 0 || x0 + iw > cw || y0 + ih > ch) return 0;
+
+      let matchCount = 0, total = iw * ih;
+
+      for (let iy = 0; iy < ih; iy++) {
+        for (let ix = 0; ix < iw; ix++) {
+          const ci = 4 * ((x0 + ix) + (y0 + iy) * cw);
+          const ii = 4 * (ix + iy * iw);
+
+          const r1 = pixels[ci], g1 = pixels[ci+1], b1 = pixels[ci+2];
+          const r2 = iconPixels[ii], g2 = iconPixels[ii+1], b2 = iconPixels[ii+2];
+
+          if (Math.abs(r1 - r2) < 35 && Math.abs(g1 - g2) < 35 && Math.abs(b1 - b2) < 35) {
+            matchCount++;
+          }
+        }
+      }
+
+      return matchCount / total;
+    }
+
+    function findAllMatches(screenImg, icon) {
+      const results = [];
+      const cw = screenImg.width, ch = screenImg.height;
+
+      for (let y = 0; y <= ch - icon.height; y++) {
+        for (let x = 0; x <= cw - icon.width; x++) {
+          if (matchesIconAt(x, y, screenImg, icon) > 0.9) {
+            results.push({x, y});
+            x += icon.width - 1; // skip ahead to avoid overlapping duplicate matches
+          }
+        }
+      }
+      return results;
+    }
+
+    function startFinder() {
+      if (!window.alt1) {
+        setStatus("Not running in Alt1 ❌", "red");
+        return;
+      }
+      if (!alt1.permissionPixel) {
+        setStatus("Pixel permission not granted ❌", "red");
+        return;
+      }
+
+      const screenW = alt1.rsWidth || 0;
+      const screenH = alt1.rsHeight || 0;
+      const screenImg = a1lib.getregion(0, 0, screenW, screenH);
+
+      if (!screenImg) {
+        setStatus("Failed to capture screen ❌", "red");
+        return;
+      }
+
+      setStatus("Scanning for stat anchors…");
+
+      const matches = findAllMatches(screenImg, statAnchorData);
+      if (matches.length > 0) {
+        matches.forEach(m => {
+          alt1.overLayRect(
+            a1lib.mixcolor(0, 255, 0),
+            m.x, m.y,
+            statAnchorData.width, statAnchorData.height,
+            3000, 3
+          );
+        });
+        setStatus(`Found ${matches.length} anchors ✅`);
+        setDebug(JSON.stringify(matches, null, 2));
+      } else {
+        setStatus("No anchors found ❌", "red");
+      }
+    }
+  </script>
+</body>
+</html>
