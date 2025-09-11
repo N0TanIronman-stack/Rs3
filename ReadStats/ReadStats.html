@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RS3 Stats Anchor Finder (multi)</title>
+  <title>RS3 Ability Bar Finder (multi)</title>
   <script src="https://runeapps.org/alt1lib.js"></script>
   <style>
     #status { margin-top: 10px; font-weight: bold; color: lime; }
@@ -10,13 +10,19 @@
   </style>
 </head>
 <body>
-  <h2>Anchor Finder Multi-Test</h2>
-  <button onclick="loadAssets()">Scan All Anchors</button>
+  <h2>Ability Bar Finder</h2>
+  <button onclick="loadAssets()">Scan All Bars</button>
   <div id="status">Waiting…</div>
   <div id="debug"></div>
 
   <script>
-    let statAnchorData = null;
+    const icons = {
+      AbilityBarHeader: null,
+      AbilityBar14x1: null,
+      AbilityBar7x2: null,
+      AbilityBar1x14: null,
+      AbilityBar2x7: null
+    };
 
     function setStatus(msg, color = "lime") {
       const el = document.getElementById("status");
@@ -45,14 +51,22 @@
     }
 
     function loadAssets() {
-      loadImageData("./statanchor.png", data => {
-        statAnchorData = data;
-        setStatus("Anchor image loaded");
-        setTimeout(startFinder, 100);
+      const keys = Object.keys(icons);
+      let loaded = 0;
+
+      keys.forEach(key => {
+        loadImageData(`./${key}.png`, data => {
+          icons[key] = data;
+          loaded++;
+          if (loaded === keys.length) {
+            setStatus("All icons loaded ✅");
+            setTimeout(startFinder, 100);
+          }
+        });
       });
     }
 
-    // Fallback loop if native multi-match not available
+    // fallback multi-match finder
     function findAllMatches(screenImg, icon, tolerance = 100) {
       let results = [];
       let temp = screenImg;
@@ -63,7 +77,6 @@
 
         results.push(match);
 
-        // mask the found region to avoid repeat match
         const canvas = document.createElement("canvas");
         canvas.width = temp.width;
         canvas.height = temp.height;
@@ -85,10 +98,6 @@
         setStatus("Pixel permission not granted ❌", "red");
         return;
       }
-      if (!statAnchorData) {
-        setStatus("Anchor image data not loaded ❌", "red");
-        return;
-      }
 
       const screenW = alt1.rsWidth || 0;
       const screenH = alt1.rsHeight || 0;
@@ -98,49 +107,52 @@
         return;
       }
 
-      setStatus("Scanning for all anchors…");
+      setStatus("Scanning for ability bars…");
 
-      let matches = null;
+      let allResults = [];
 
-      try {
-        // Check if API supports multi-match flag
-        if (typeof a1lib.findSubImage === "function") {
-          matches = a1lib.findSubImage(screenImg, statAnchorData, 35, true);
-        } else if (typeof a1lib.findsubimg === "function") {
-          matches = a1lib.findsubimg(screenImg, statAnchorData, 35, true);
+      Object.entries(icons).forEach(([name, icon]) => {
+        if (!icon) return;
+
+        let matches = null;
+        try {
+          if (typeof a1lib.findSubImage === "function") {
+            matches = a1lib.findSubImage(screenImg, icon, 100, true);
+          } else if (typeof a1lib.findsubimg === "function") {
+            matches = a1lib.findsubimg(screenImg, icon, 100, true);
+          }
+        } catch (e) {
+          console.warn(`Native multi-match failed for ${name}, fallback`, e);
         }
-      } catch (e) {
-        console.warn("Native multi-match failed, falling back", e);
-      }
 
-      // Fallback if we only got a single object or null
-      if (!matches || (!Array.isArray(matches) && !matches.length)) {
-        matches = findAllMatches(screenImg, statAnchorData, 35);
-      }
+        if (!matches || (!Array.isArray(matches) && !matches.length)) {
+          matches = findAllMatches(screenImg, icon, 100);
+        }
 
-      if (Array.isArray(matches) && matches.length > 0) {
-        setStatus(`Found ${matches.length} anchors ✅`);
-        matches.forEach(m => {
-          alt1.overLayRect(
-            a1lib.mixcolor(0, 255, 0),
-            m.x, m.y,
-            statAnchorData.width, statAnchorData.height,
-            3000, 3
-          );
-        });
-        setDebug(JSON.stringify(matches, null, 2));
-      } else if (matches && matches.x !== undefined) {
-        // single object
-        setStatus("Found 1 anchor ✅");
-        alt1.overLayRect(
-          a1lib.mixcolor(0, 255, 0),
-          matches.x, matches.y,
-          statAnchorData.width, statAnchorData.height,
-          3000, 3
-        );
-        setDebug(JSON.stringify(matches, null, 2));
+        if (Array.isArray(matches) && matches.length > 0) {
+          matches.forEach(m => {
+            alt1.overLayRect(
+              a1lib.mixcolor(0, 255, 0),
+              m.x, m.y,
+              icon.width, icon.height,
+              3000, 3
+            );
+            allResults.push({
+              image: name,
+              x: m.x,
+              y: m.y,
+              w: icon.width,
+              h: icon.height
+            });
+          });
+        }
+      });
+
+      if (allResults.length > 0) {
+        setStatus(`Found ${allResults.length} matches ✅`);
+        setDebug(JSON.stringify(allResults, null, 2));
       } else {
-        setStatus("No anchors found ❌", "red");
+        setStatus("No ability bars found ❌", "red");
       }
     }
   </script>
