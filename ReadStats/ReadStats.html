@@ -105,20 +105,22 @@
         setStatus("Pixel permission not granted ❌", "red");
         return;
       }
-
+    
       const screenW = alt1.rsWidth || 0;
       const screenH = alt1.rsHeight || 0;
       const screenImg = a1lib.getregion(0, 0, screenW, screenH);
-
+    
       if (!screenImg) {
         setStatus("Failed to capture screen ❌", "red");
         return;
       }
-
+    
       setStatus("Scanning for stat anchors…");
-
-      const matches = findAllMatches(screenImg, statAnchorData);
-      if (matches.length > 0) {
+    
+      // MUCH faster native call
+      const matches = a1lib.findSubImage(screenImg, statAnchorData, 35);
+    
+      if (matches && matches.length > 0) {
         matches.forEach(m => {
           alt1.overLayRect(
             a1lib.mixcolor(0, 255, 0),
