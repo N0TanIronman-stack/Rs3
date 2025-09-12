@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.25</title>
+  <title>Leagues Tasks V1.3</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
     html, body {
@@ -83,6 +83,27 @@
       color: #888;
       font-style: italic;
     }
+
+    .points-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    #resetButton {
+      padding: 6px 12px;
+      font-weight: bold;
+      background-color: #444;
+      color: #eee;
+      border: 1px solid #666;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    #resetButton:hover {
+      background-color: #555;
+    }
+    
   </style>
 </head>
 <body class="nis">
@@ -90,7 +111,10 @@
     <div class="nispanel">
       <div id="header">
         <h2 class="nispaneltitle">Leagues Tasks</h2>
-        <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
+        <div class="points-container">
+          <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
+          <button id="resetButton" class="nisbutton">Reset Progress</button>
+        </div>
       </div>
       <div id="tableScroll">
         <div id="tableContainer">Loading...</div>
@@ -152,6 +176,28 @@
       row.classList.toggle('completed');
       updateCompletedPoints();
     }
+
+    let resetClicks = 0;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const resetButton = document.getElementById("resetButton");
+        resetButton.addEventListener("click", () => {
+          resetClicks++;
+          if (resetClicks < 3) {
+            resetButton.textContent = `Click ${3 - resetClicks} more time${3 - resetClicks > 1 ? 's' : ''} to confirm`;
+          } else {
+            resetAllCompleted();
+            resetButton.textContent = "Reset Progress";
+            resetClicks = 0;
+          }
+        });
+      });
+    
+      function resetAllCompleted() {
+        const rows = document.querySelectorAll("table tbody tr");
+        rows.forEach(row => row.classList.remove("completed"));
+        updateCompletedPoints();
+      }
   </script>
 </body>
 </html>
