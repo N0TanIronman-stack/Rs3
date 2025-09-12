@@ -46,9 +46,6 @@
             rows[i].forEach(cell => html += `<td>${cell}</td>`);
             html += '</tr>';
           }
-        function markComplete(row) {
-          row.classList.toggle('completed');
-        }
 
         html += '</tbody></table>';
         document.getElementById('tableContainer').innerHTML = html;
@@ -57,6 +54,10 @@
         console.error(err);
         document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading sheet. Check your API key, Sheet ID, and permissions.</p>`;
       });
+
+    function markComplete(row) {
+          row.classList.toggle('completed');
+        }
   </script>
 </body>
 </html>
