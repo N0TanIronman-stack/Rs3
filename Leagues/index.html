@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.0</title>
+  <title>Leagues Tasks V1.1</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -35,6 +35,7 @@
         const rows = data.values;
         if (!rows || rows.length === 0) {
           document.getElementById('tableContainer').innerHTML = '<p>No data found.</p>';
+          updateCompletedPoints(); // 🔹 NEW: calculate initial total
           return;
         }
     
@@ -63,8 +64,25 @@
         document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading sheet. Check your API key, Sheet ID, and permissions.</p>`;
       });
 
+    function updateCompletedPoints() {
+      const table = document.querySelector("table tbody");
+      let total = 0;
+      const rows = table.querySelectorAll("tr");
+    
+      rows.forEach(r => {
+        if (r.classList.contains("completed")) {
+          const pointsCell = r.children[6]; // Column G = index 6
+          const points = parseInt(pointsCell.textContent) || 0;
+          total += points;
+        }
+      });
+    
+      document.getElementById("pointsTotal").textContent = `Total Points: ${total}`;
+    }
+    
     function markComplete(row, index) {
       row.classList.toggle('completed');
+      updateCompletedPoints(); // 🔹 Recalculate after toggle
     
       // Recalculate total points from completed rows
       const table = document.querySelector("table tbody");
