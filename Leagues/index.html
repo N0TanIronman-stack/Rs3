@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live Google Sheet Viewer V1.0</title>
+  <title>Leagues Tasks V1.0</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -37,16 +37,24 @@
           document.getElementById('tableContainer').innerHTML = '<p>No data found.</p>';
           return;
         }
-
-        let html = '<table><thead><tr>';
-          rows[0].forEach(header => html += `<th>${header}</th>`);
-          html += '</tr></thead><tbody>';
-          for (let i = 1; i < rows.length; i++) {
-            html += `<tr onclick="markComplete(this)">`;
-            rows[i].forEach(cell => html += `<td>${cell}</td>`);
-            html += '</tr>';
-          }
-
+    
+        // 🔹 NEW: Calculate total points from column G (index 6)
+        let totalPoints = 0;
+        for (let i = 1; i < rows.length; i++) {
+          const points = parseInt(rows[i][6]) || 0;
+          totalPoints += points;
+        }
+    
+        // 🔹 MODIFIED: Add total points header before table
+        let html = `<h3>Total Points: ${totalPoints}</h3><table><thead><tr>`;
+        rows[0].forEach(header => html += `<th>${header}</th>`);
+        html += '</tr></thead><tbody>';
+        for (let i = 1; i < rows.length; i++) {
+          html += `<tr onclick="markComplete(this)">`;
+          rows[i].forEach(cell => html += `<td>${cell}</td>`);
+          html += '</tr>';
+        }
+    
         html += '</tbody></table>';
         document.getElementById('tableContainer').innerHTML = html;
       })
