@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>Leagues Tasks V1.2</title>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
+  </head>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -12,10 +15,12 @@
       cursor: pointer;
     }
     .completed {
-      background-color: #d3d3d3;
+      background-color: #2e2e2e;
       text-decoration: line-through;
-      color: #888;
+      color: #aaa;
+      font-style: italic;
     }
+
     #header {
       position: sticky;
       top: 0;
@@ -32,11 +37,12 @@
   </style>
 </head>
 <body>
-  <div id="header">
-    <h2>Leagues Tasks</h2>
-    <h3 id="pointsTotal">Total Points: 0</h3>
+  <div id="header" class="nisheader">
+    <h2 class="nispaneltitle">Leagues Tasks</h2>
+    <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
   </div>
-  <div id="tableScroll">
+
+  <div id="tableScroll" class="nispanel">
     <div id="tableContainer">Loading...</div>
   </div>
 
@@ -65,7 +71,7 @@
         }
     
         // 🔹 MODIFIED: Add total points header before table
-        let html = `<table><thead><tr>`;
+        let html = `<table class="nistable"><thead><tr>`;
         rows[0].forEach(header => html += `<th>${header}</th>`);
         html += '</tr></thead><tbody>';
         for (let i = 1; i < rows.length; i++) {
