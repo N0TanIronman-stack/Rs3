@@ -1,49 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.3</title>
-  <head>
-    <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
-  </head>
+  <title>Leagues Tasks V1.4</title>
+  <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    tr:hover {
-      background-color: #e0f7fa;
+    body {
+      margin: 0;
+      background-color: #1a1a1a;
+      color: #ddd;
+    }
+
+    .nispanel {
+      margin: 20px;
+      padding: 20px;
+      background-color: #2b2b2b;
+      border: 1px solid #444;
+      border-radius: 6px;
+    }
+
+    .nispaneltitle {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #f0f0f0;
+    }
+
+    .nispanelsubtitle {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #ccc;
+    }
+
+    .nistable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .nistable th, .nistable td {
+      border: 1px solid #555;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .nistable th {
+      background-color: #333;
+      color: #eee;
+    }
+
+    .nistable tr:hover {
+      background-color: #444;
       cursor: pointer;
     }
+
     .completed {
       background-color: #2e2e2e;
       text-decoration: line-through;
-      color: #aaa;
+      color: #888;
       font-style: italic;
     }
 
-    #header {
-      position: sticky;
-      top: 0;
-      background-color: white;
-      z-index: 10;
-      padding-bottom: 10px;
-    }
-    
     #tableScroll {
       max-height: 600px;
       overflow-y: auto;
-      border-top: 1px solid #ccc;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <div id="header" class="nisheader">
+  <div class="nispanel">
     <h2 class="nispaneltitle">Leagues Tasks</h2>
     <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
-  </div>
-
-  <div id="tableScroll" class="nispanel">
-    <div id="tableContainer">Loading...</div>
+    <div id="tableScroll">
+      <div id="tableContainer">Loading...</div>
+    </div>
   </div>
 
   <script>
@@ -59,18 +87,10 @@
         const rows = data.values;
         if (!rows || rows.length === 0) {
           document.getElementById('tableContainer').innerHTML = '<p>No data found.</p>';
-          updateCompletedPoints(); // 🔹 NEW: calculate initial total
+          updateCompletedPoints();
           return;
         }
-    
-        // 🔹 NEW: Calculate total points from column G (index 6)
-        let totalPoints = 0;
-        for (let i = 1; i < rows.length; i++) {
-          const points = parseInt(rows[i][6]) || 0;
-          totalPoints += points;
-        }
-    
-        // 🔹 MODIFIED: Add total points header before table
+
         let html = `<table class="nistable"><thead><tr>`;
         rows[0].forEach(header => html += `<th>${header}</th>`);
         html += '</tr></thead><tbody>';
@@ -79,9 +99,9 @@
           rows[i].forEach(cell => html += `<td>${cell}</td>`);
           html += '</tr>';
         }
-    
         html += '</tbody></table>';
         document.getElementById('tableContainer').innerHTML = html;
+        updateCompletedPoints();
       })
       .catch(err => {
         console.error(err);
@@ -92,7 +112,7 @@
       const table = document.querySelector("table tbody");
       let total = 0;
       const rows = table.querySelectorAll("tr");
-    
+
       rows.forEach(r => {
         if (r.classList.contains("completed")) {
           const pointsCell = r.children[6]; // Column G = index 6
@@ -100,28 +120,13 @@
           total += points;
         }
       });
-    
+
       document.getElementById("pointsTotal").textContent = `Total Points: ${total}`;
     }
-    
+
     function markComplete(row, index) {
       row.classList.toggle('completed');
-      updateCompletedPoints(); // 🔹 Recalculate after toggle
-    
-      // Recalculate total points from completed rows
-      const table = document.querySelector("table tbody");
-      let total = 0;
-      const rows = table.querySelectorAll("tr");
-    
-      rows.forEach(r => {
-        if (r.classList.contains("completed")) {
-          const pointsCell = r.children[6]; // Column G = index 6
-          const points = parseInt(pointsCell.textContent) || 0;
-          total += points;
-        }
-      });
-    
-      document.getElementById("pointsTotal").textContent = `Total Points: ${total}`;
+      updateCompletedPoints();
     }
   </script>
 </body>
