@@ -91,7 +91,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 20px;
+      width: 100%;
+    }
+    
+    .header-left, .header-right {
+      flex: 0 0 auto;
+    }
+    
+    .header-right {
+      text-align: right;
     }
     
     #header {
@@ -108,8 +116,8 @@
   <body class="nis">
     <div class="page">
       <div class="nispanel header-flex">
-        <h2 class="nispaneltitle">Leagues Tasks</h2>
-        <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
+        <h2 class="nispaneltitle header-left">Leagues Tasks</h2>
+        <h3 id="pointsTotal" class="nispanelsubtitle header-right">Total Points: 0</h3>
         <div id="tableScroll">
           <div id="tableContainer">Loading...</div>
         </div>
