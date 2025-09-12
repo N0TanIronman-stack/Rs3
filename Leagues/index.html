@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.1</title>
+  <title>Leagues Tasks V1.2</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -16,11 +16,29 @@
       text-decoration: line-through;
       color: #888;
     }
+    #header {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 10;
+      padding-bottom: 10px;
+    }
+    
+    #tableScroll {
+      max-height: 600px;
+      overflow-y: auto;
+      border-top: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
-  <h2>Leagues Tasks</h2>
-  <div id="tableContainer">Loading...</div>
+  <div id="header">
+    <h2>Leagues Tasks</h2>
+    <h3 id="pointsTotal">Total Points: 0</h3>
+  </div>
+  <div id="tableScroll">
+    <div id="tableContainer">Loading...</div>
+  </div>
 
   <script>
     const sheetId = "1D9wCL36JAbEUr9OaWpEXfe7lDtcLk4_FBsvXhBT_FGg";
@@ -47,7 +65,7 @@
         }
     
         // 🔹 MODIFIED: Add total points header before table
-        let html = `<h3 id="pointsTotal">Total Points: 0</h3><table><thead><tr>`;
+        let html = `<table><thead><tr>`;
         rows[0].forEach(header => html += `<th>${header}</th>`);
         html += '</tr></thead><tbody>';
         for (let i = 1; i < rows.length; i++) {
