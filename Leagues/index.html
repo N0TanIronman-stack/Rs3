@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.2</title>
+  <title>Leagues Tasks V1.25</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
-    body {
-      margin: 0;
-      background-color: #1a1a1a;
-      color: #ddd;
-    }
-
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
+      background-color: #1a1a1a;
+      color: #ddd;
       overflow: hidden;
     }
 
@@ -22,41 +18,42 @@
       flex-direction: column;
       height: 100%;
     }
-    
+
     .nispanel {
       display: flex;
       flex-direction: column;
-      height: 100vh; /* Full viewport height */
+      flex: 1;
       box-sizing: border-box;
       padding: 20px;
-      background-color: #2b2b2b;
-      border: 1px solid #444;
-      border-radius: 6px;
-    }
-    
-    #tableScroll {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .nispanel {
       margin: 20px;
-      padding: 20px;
       background-color: #2b2b2b;
       border: 1px solid #444;
       border-radius: 6px;
     }
 
-    .nispaneltitle {
-      font-size: 24px;
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 10px;
+    }
+
+    #header h2 {
+      margin: 0;
+      font-size: 24px;
       color: #f0f0f0;
     }
 
-    .nispanelsubtitle {
+    #header h3 {
+      margin: 0;
       font-size: 18px;
-      margin-bottom: 20px;
       color: #ccc;
+      text-align: right;
+    }
+
+    #tableScroll {
+      flex: 1;
+      overflow-y: auto;
     }
 
     .nistable {
@@ -86,45 +83,20 @@
       color: #888;
       font-style: italic;
     }
-
-    .header-flex {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-    }
-    
-    .header-left, .header-right {
-      flex: 0 0 auto;
-    }
-    
-    .header-right {
-      text-align: right;
-    }
-    
-    #header {
-      flex: 0 0 auto;
-    }
-
-    #tableScroll {
-      flex: 1 1 auto;
-      overflow-y: auto;
-      margin-top: 10px;
-    }
   </style>
 </head>
-  <body class="nis">
-    <div class="page">
-      <div class="nispanel header-flex">
-        <h2 class="nispaneltitle header-left">Leagues Tasks</h2>
-        <h3 id="pointsTotal" class="nispanelsubtitle header-right">Total Points: 0</h3>
-        <div id="tableScroll">
-          <div id="tableContainer">Loading...</div>
-        </div>
+<body class="nis">
+  <div class="page">
+    <div class="nispanel">
+      <div id="header">
+        <h2 class="nispaneltitle">Leagues Tasks</h2>
+        <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
+      </div>
+      <div id="tableScroll">
+        <div id="tableContainer">Loading...</div>
       </div>
     </div>
-  </body>
-
+  </div>
 
   <script>
     const sheetId = "1D9wCL36JAbEUr9OaWpEXfe7lDtcLk4_FBsvXhBT_FGg";
