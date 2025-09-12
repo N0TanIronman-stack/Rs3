@@ -7,16 +7,25 @@
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f2f2f2; }
+    tr:hover {
+      background-color: #e0f7fa;
+      cursor: pointer;
+    }
+    .completed {
+      background-color: #d3d3d3;
+      text-decoration: line-through;
+      color: #888;
+    }
   </style>
 </head>
 <body>
-  <h2>Live Google Sheet Table</h2>
+  <h2>Leagues Tasks</h2>
   <div id="tableContainer">Loading...</div>
 
   <script>
-    const sheetId = "1D9wCL36JAbEUr9OaWpEXfe7lDtcLk4_FBsvXhBT_FGg"; // Replace with your actual Sheet ID
-    const apiKey = "AIzaSyBNh1WqteEDRI4smB9xNWgRceGjoDvXEN4";   // Replace with your actual API Key
-    const sheetName = "Sheet1!A1:G1200"; // Replace with your tab name
+    const sheetId = "1D9wCL36JAbEUr9OaWpEXfe7lDtcLk4_FBsvXhBT_FGg";
+    const apiKey = "AIzaSyBNh1WqteEDRI4smB9xNWgRceGjoDvXEN4";
+    const sheetName = "Sheet1!A1:G1200";
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
 
@@ -30,13 +39,17 @@
         }
 
         let html = '<table><thead><tr>';
-        rows[0].forEach(header => html += `<th>${header}</th>`);
-        html += '</tr></thead><tbody>';
-        for (let i = 1; i < rows.length; i++) {
-          html += '<tr>';
-          rows[i].forEach(cell => html += `<td>${cell}</td>`);
-          html += '</tr>';
+          rows[0].forEach(header => html += `<th>${header}</th>`);
+          html += '</tr></thead><tbody>';
+          for (let i = 1; i < rows.length; i++) {
+            html += `<tr onclick="markComplete(this)">`;
+            rows[i].forEach(cell => html += `<td>${cell}</td>`);
+            html += '</tr>';
+          }
+        function markComplete(row) {
+          row.classList.toggle('completed');
         }
+
         html += '</tbody></table>';
         document.getElementById('tableContainer').innerHTML = html;
       })
