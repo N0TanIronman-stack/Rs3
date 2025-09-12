@@ -46,11 +46,11 @@
         }
     
         // 🔹 MODIFIED: Add total points header before table
-        let html = `<h3>Total Points: ${totalPoints}</h3><table><thead><tr>`;
+        let html = `<h3 id="pointsTotal">Total Points: 0</h3><table><thead><tr>`;
         rows[0].forEach(header => html += `<th>${header}</th>`);
         html += '</tr></thead><tbody>';
         for (let i = 1; i < rows.length; i++) {
-          html += `<tr onclick="markComplete(this)">`;
+          html += `<tr onclick="markComplete(this, ${i})">`;
           rows[i].forEach(cell => html += `<td>${cell}</td>`);
           html += '</tr>';
         }
@@ -63,9 +63,24 @@
         document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading sheet. Check your API key, Sheet ID, and permissions.</p>`;
       });
 
-    function markComplete(row) {
-          row.classList.toggle('completed');
+    function markComplete(row, index) {
+      row.classList.toggle('completed');
+    
+      // Recalculate total points from completed rows
+      const table = document.querySelector("table tbody");
+      let total = 0;
+      const rows = table.querySelectorAll("tr");
+    
+      rows.forEach(r => {
+        if (r.classList.contains("completed")) {
+          const pointsCell = r.children[6]; // Column G = index 6
+          const points = parseInt(pointsCell.textContent) || 0;
+          total += points;
         }
+      });
+    
+      document.getElementById("pointsTotal").textContent = `Total Points: ${total}`;
+    }
   </script>
 </body>
 </html>
