@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.3</title>
+  <title>Leagues Tasks V1.0</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
     html, body {
@@ -114,7 +114,9 @@
         <h2 class="nispaneltitle">Leagues Tasks</h2>
         <div class="points-container">
           <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
-          <button id="resetButton" class="nisbutton nissmallbutton">Reset Progress</button>
+          <div id="resetButton" class="nisbutton nissmallbutton">
+            <span>Reset Progress</span>
+          </div>
         </div>
       </div>
       <div id="tableScroll">
@@ -182,16 +184,17 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       const resetButton = document.getElementById("resetButton");
-      resetButton.addEventListener("click", () => {
-        resetClicks++;
-        if (resetClicks < 3) {
-          resetButton.textContent = `Click ${3 - resetClicks} more time${3 - resetClicks > 1 ? 's' : ''} to confirm`;
-        } else {
-          resetAllCompleted();
-          resetButton.textContent = "Reset Progress";
-          resetClicks = 0;
-        }
-      });
+        resetButton.addEventListener("click", () => {
+          resetClicks++;
+          const span = resetButton.querySelector("span");
+          if (resetClicks < 3) {
+            span.textContent = `Click ${3 - resetClicks} more time${3 - resetClicks > 1 ? 's' : ''} to confirm`;
+          } else {
+            resetAllCompleted();
+            span.textContent = "Reset Progress";
+            resetClicks = 0;
+          }
+        });
     });
 
     function resetAllCompleted() {
