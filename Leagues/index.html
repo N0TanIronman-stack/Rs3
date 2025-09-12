@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.1</title>
+  <title>Leagues Tasks V1.2</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
     body {
@@ -86,6 +86,14 @@
       color: #888;
       font-style: italic;
     }
+
+    .header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+    
     #header {
       flex: 0 0 auto;
     }
@@ -99,7 +107,7 @@
 </head>
   <body class="nis">
     <div class="page">
-      <div class="nispanel">
+      <div class="nispanel header-flex">
         <h2 class="nispaneltitle">Leagues Tasks</h2>
         <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
         <div id="tableScroll">
