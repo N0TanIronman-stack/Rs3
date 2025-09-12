@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live Google Sheet Viewer</title>
+  <title>Live Google Sheet Viewer V1.0</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -16,7 +16,7 @@
   <script>
     const sheetId = "1xFDWDA93U5VhL1htLBsNN8edgrGNQkiS"; // Replace with your actual Sheet ID
     const apiKey = "AIzaSyBNh1WqteEDRI4smB9xNWgRceGjoDvXEN4";   // Replace with your actual API Key
-    const sheetName = "LeaguesTasks";      // Replace with your tab name
+    const sheetName = "LeaguesTasks!A1:Z100"; // Replace with your tab name
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
 
