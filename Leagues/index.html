@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Google Sheets JSON to Table</title>
+  <title>Google Sheet CSV Viewer</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -10,47 +10,32 @@
   </style>
 </head>
 <body>
-  <h2>Google Sheets JSON Viewer</h2>
-  <input type="text" id="sheetId" placeholder="Enter Google Sheet ID" style="width: 80%;">
-  <button onclick="loadSheet()">Load Table</button>
+  <h2>Google Sheet CSV Viewer</h2>
+  <input type="text" id="csvUrl" placeholder="Paste CSV link here" style="width: 80%;">
+  <button onclick="loadCSV()">Load Table</button>
 
   <div id="tableContainer"></div>
 
   <script>
-    function loadSheet() {
-      const sheetId = document.getElementById('sheetId').value;
-      const url = `https://spreadsheets.google.com/feeds/list/${sheetId}/od6/public/values?alt=json`;
-
+    function loadCSV() {
+      const url = document.getElementById('csvUrl').value;
       fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          const entries = data.feed.entry;
-          if (!entries || entries.length === 0) {
-            document.getElementById('tableContainer').innerHTML = '<p>No data found.</p>';
-            return;
-          }
-
+        .then(response => response.text())
+        .then(text => {
+          const rows = text.trim().split('\n').map(row => row.split(','));
           let html = '<table><thead><tr>';
-          const headers = Object.keys(entries[0])
-            .filter(key => key.startsWith('gsx$'))
-            .map(key => key.replace('gsx$', ''));
-          headers.forEach(header => html += `<th>${header}</th>`);
+          rows[0].forEach(header => html += `<th>${header}</th>`);
           html += '</tr></thead><tbody>';
-
-          entries.forEach(entry => {
+          for (let i = 1; i < rows.length; i++) {
             html += '<tr>';
-            headers.forEach(header => {
-              html += `<td>${entry['gsx$' + header]['$t']}</td>`;
-            });
+            rows[i].forEach(cell => html += `<td>${cell}</td>`);
             html += '</tr>';
-          });
-
+          }
           html += '</tbody></table>';
           document.getElementById('tableContainer').innerHTML = html;
         })
         .catch(err => {
-          console.error(err);
-          document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading data. Make sure the sheet is published and the ID is correct.</p>`;
+          document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading CSV. Make sure it's published and publicly accessible.</p>`;
         });
     }
   </script>
