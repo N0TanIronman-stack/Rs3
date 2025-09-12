@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.1</title>
+  <title>Leagues Tasks V1.2</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
     html, body {
@@ -126,76 +126,104 @@
   </div>
 
   <script>
-    const sheetId = "1D9wCL36JAbEUr9OaWpEXfe7lDtcLk4_FBsvXhBT_FGg";
-    const apiKey = "AIzaSyBNh1WqteEDRI4smB9xNWgRceGjoDvXEN4";
-    const sheetName = "Sheet1!A1:H1200";
-
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
-
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        const rows = data.values;
-        if (!rows || rows.length === 0) {
-          document.getElementById('tableContainer').innerHTML = '<p>No data found.</p>';
+      const sheetId = "1D9wCL36JAbEUr9OaWpEXfe7lDtcLk4_FBsvXhBT_FGg";
+      const apiKey = "AIzaSyBNh1WqteEDRI4smB9xNWgRceGjoDvXEN4";
+      const sheetName = "Sheet1!A1:H1200";
+    
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
+    
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const rows = data.values;
+          if (!rows || rows.length === 0) {
+            document.getElementById('tableContainer').innerHTML = '<p>No data found.</p>';
+            updateCompletedPoints();
+            return;
+          }
+    
+          let html = `<table class="nistable"><thead><tr>`;
+          rows[0].forEach(header => html += `<th>${header}</th>`);
+          html += '</tr></thead><tbody>';
+          for (let i = 1; i < rows.length; i++) {
+            html += `<tr onclick="markComplete(this)">`;
+            rows[i].forEach(cell => html += `<td>${cell}</td>`);
+            html += '</tr>';
+          }
+          html += '</tbody></table>';
+          document.getElementById('tableContainer').innerHTML = html;
+          restoreCompletedTasks();
           updateCompletedPoints();
-          return;
-        }
-
-        let html = `<table class="nistable"><thead><tr>`;
-        rows[0].forEach(header => html += `<th>${header}</th>`);
-        html += '</tr></thead><tbody>';
-        for (let i = 1; i < rows.length; i++) {
-          html += `<tr onclick="markComplete(this, ${i})">`;
-          rows[i].forEach(cell => html += `<td>${cell}</td>`);
-          html += '</tr>';
-        }
-        html += '</tbody></table>';
-        document.getElementById('tableContainer').innerHTML = html;
-        restoreCompletedTasks();
-        updateCompletedPoints();
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading sheet. Check your API key, Sheet ID, and permissions.</p>`;
-      });
-
-    function updateCompletedPoints() {
-      const table = document.querySelector("table tbody");
-      let total = 0;
-      const rows = table.querySelectorAll("tr");
-
-      rows.forEach(r => {
-        if (r.classList.contains("completed")) {
-          const pointsCell = r.children[6]; // Column G = index 6
-          const points = parseInt(pointsCell.textContent) || 0;
-          total += points;
-        }
-      });
-
-      document.getElementById("pointsTotal").textContent = `Total Points: ${total}`;
-    }
-
-    function markComplete(row, index) {
-      row.classList.toggle('completed');
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading sheet. Check your API key, Sheet ID, and permissions.</p>`;
+        });
     
-      const taskId = `task-${index}`;
-      let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || {};
-    
-      if (row.classList.contains("completed")) {
-        completedTasks[taskId] = true;
-      } else {
-        delete completedTasks[taskId];
+      function getTaskId(row) {
+        const cells = row.querySelectorAll("td");
+        const location = cells[1]?.textContent.trim(); // Column B
+        const taskName = cells[2]?.textContent.trim(); // Column C
+        return `task-${location}-${taskName}`;
       }
     
-      localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
-      updateCompletedPoints();
-    }
-
-    let resetClicks = 0;
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const resetButton = document.getElementById("resetButton");
+      function markComplete(row) {
+        row.classList.toggle('completed');
+    
+        const taskId = getTaskId(row);
+        let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || {};
+    
+        if (row.classList.contains("completed")) {
+          completedTasks[taskId] = true;
+        } else {
+          delete completedTasks[taskId];
+        }
+    
+        localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+        updateCompletedPoints();
+      }
+    
+      function restoreCompletedTasks() {
+        const completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || {};
+        const rows = document.querySelectorAll("table tbody tr");
+    
+        rows.forEach(row => {
+          const taskId = getTaskId(row);
+          if (completedTasks[taskId]) {
+            row.classList.add("completed");
+          }
+        });
+    
+        updateCompletedPoints();
+      }
+    
+      function updateCompletedPoints() {
+        const table = document.querySelector("table tbody");
+        let total = 0;
+        const rows = table.querySelectorAll("tr");
+    
+        rows.forEach(r => {
+          if (r.classList.contains("completed")) {
+            const pointsCell = r.children[6]; // Column G = index 6
+            const points = parseInt(pointsCell.textContent) || 0;
+            total += points;
+          }
+        });
+    
+        document.getElementById("pointsTotal").textContent = `Total Points: ${total}`;
+      }
+    
+      function resetAllCompleted() {
+        const rows = document.querySelectorAll("table tbody tr");
+        rows.forEach(row => row.classList.remove("completed"));
+        localStorage.removeItem("completedTasks");
+        updateCompletedPoints();
+      }
+    
+      let resetClicks = 0;
+    
+      document.addEventListener("DOMContentLoaded", () => {
+        const resetButton = document.getElementById("resetButton");
         resetButton.addEventListener("click", () => {
           resetClicks++;
           const span = resetButton.querySelector("span");
@@ -207,28 +235,7 @@
             resetClicks = 0;
           }
         });
-    });
-
-    function resetAllCompleted() {
-      const rows = document.querySelectorAll("table tbody tr");
-      rows.forEach(row => row.classList.remove("completed"));
-      localStorage.removeItem("completedTasks"); // ✅ Clear saved progress
-      updateCompletedPoints();
-    }
-
-    function restoreCompletedTasks() {
-      const completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || {};
-      const rows = document.querySelectorAll("table tbody tr");
-    
-      rows.forEach((row, index) => {
-        const taskId = `task-${index}`;
-        if (completedTasks[taskId]) {
-          row.classList.add("completed");
-        }
       });
-    
-      updateCompletedPoints();
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
