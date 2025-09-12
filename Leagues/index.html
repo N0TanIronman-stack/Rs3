@@ -18,7 +18,9 @@
 
   <script>
     function loadSheet() {
-      const url = document.getElementById('sheetUrl').value;
+      const proxy = "https://cors-anywhere.herokuapp.com/";
+      const url = proxy + document.getElementById('sheetUrl').value;
+
       fetch(url)
         .then(response => response.text())
         .then(csv => {
