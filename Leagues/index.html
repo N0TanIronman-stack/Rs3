@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Google Sheet CSV Viewer</title>
+  <title>Live Google Sheet Viewer</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -10,34 +10,40 @@
   </style>
 </head>
 <body>
-  <h2>Google Sheet CSV Viewer</h2>
-  <input type="text" id="csvUrl" placeholder="Paste CSV link here" style="width: 80%;">
-  <button onclick="loadCSV()">Load Table</button>
-
-  <div id="tableContainer"></div>
+  <h2>Live Google Sheet Table</h2>
+  <div id="tableContainer">Loading...</div>
 
   <script>
-    function loadCSV() {
-      const url = document.getElementById('csvUrl').value;
-      fetch(url)
-        .then(response => response.text())
-        .then(text => {
-          const rows = text.trim().split('\n').map(row => row.split(','));
-          let html = '<table><thead><tr>';
-          rows[0].forEach(header => html += `<th>${header}</th>`);
-          html += '</tr></thead><tbody>';
-          for (let i = 1; i < rows.length; i++) {
-            html += '<tr>';
-            rows[i].forEach(cell => html += `<td>${cell}</td>`);
-            html += '</tr>';
-          }
-          html += '</tbody></table>';
-          document.getElementById('tableContainer').innerHTML = html;
-        })
-        .catch(err => {
-          document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading CSV. Make sure it's published and publicly accessible.</p>`;
-        });
-    }
+    const sheetId = "1xFDWDA93U5VhL1htLBsNN8edgrGNQkiS"; // Replace with your actual Sheet ID
+    const apiKey = "AIzaSyBNh1WqteEDRI4smB9xNWgRceGjoDvXEN4";   // Replace with your actual API Key
+    const sheetName = "Leagues Tasks";      // Replace with your tab name
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const rows = data.values;
+        if (!rows || rows.length === 0) {
+          document.getElementById('tableContainer').innerHTML = '<p>No data found.</p>';
+          return;
+        }
+
+        let html = '<table><thead><tr>';
+        rows[0].forEach(header => html += `<th>${header}</th>`);
+        html += '</tr></thead><tbody>';
+        for (let i = 1; i < rows.length; i++) {
+          html += '<tr>';
+          rows[i].forEach(cell => html += `<td>${cell}</td>`);
+          html += '</tr>';
+        }
+        html += '</tbody></table>';
+        document.getElementById('tableContainer').innerHTML = html;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('tableContainer').innerHTML = `<p style="color:red;">Error loading sheet. Check your API key, Sheet ID, and permissions.</p>`;
+      });
   </script>
 </body>
 </html>
