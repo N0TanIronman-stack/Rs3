@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.0</title>
+  <title>Leagues Tasks V1.1</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
     html, body {
@@ -152,6 +152,7 @@
         }
         html += '</tbody></table>';
         document.getElementById('tableContainer').innerHTML = html;
+        restoreCompletedTasks();
         updateCompletedPoints();
       })
       .catch(err => {
@@ -177,6 +178,17 @@
 
     function markComplete(row, index) {
       row.classList.toggle('completed');
+    
+      const taskId = `task-${index}`;
+      let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || {};
+    
+      if (row.classList.contains("completed")) {
+        completedTasks[taskId] = true;
+      } else {
+        delete completedTasks[taskId];
+      }
+    
+      localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
       updateCompletedPoints();
     }
 
@@ -200,6 +212,21 @@
     function resetAllCompleted() {
       const rows = document.querySelectorAll("table tbody tr");
       rows.forEach(row => row.classList.remove("completed"));
+      localStorage.removeItem("completedTasks"); // ✅ Clear saved progress
+      updateCompletedPoints();
+    }
+
+    function restoreCompletedTasks() {
+      const completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || {};
+      const rows = document.querySelectorAll("table tbody tr");
+    
+      rows.forEach((row, index) => {
+        const taskId = `task-${index}`;
+        if (completedTasks[taskId]) {
+          row.classList.add("completed");
+        }
+      });
+    
       updateCompletedPoints();
     }
   </script>
