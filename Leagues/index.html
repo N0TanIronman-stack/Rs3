@@ -1,13 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leagues Tasks V1.4</title>
+  <title>Leagues Tasks V1.0</title>
   <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
   <style>
     body {
       margin: 0;
       background-color: #1a1a1a;
       color: #ddd;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .page {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .nispanel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    #tableScroll {
+      flex: 1;
+      overflow-y: auto;
     }
 
     .nispanel {
@@ -65,14 +90,18 @@
     }
   </style>
 </head>
-<body class="nis">
-  <div class="nispanel">
-    <h2 class="nispaneltitle">Leagues Tasks</h2>
-    <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
-    <div id="tableScroll">
-      <div id="tableContainer">Loading...</div>
+  <body class="nis">
+    <div class="page">
+      <div class="nispanel">
+        <h2 class="nispaneltitle">Leagues Tasks</h2>
+        <h3 id="pointsTotal" class="nispanelsubtitle">Total Points: 0</h3>
+        <div id="tableScroll">
+          <div id="tableContainer">Loading...</div>
+        </div>
+      </div>
     </div>
-  </div>
+  </body>
+
 
   <script>
     const sheetId = "1D9wCL36JAbEUr9OaWpEXfe7lDtcLk4_FBsvXhBT_FGg";
