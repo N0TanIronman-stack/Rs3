@@ -1,7 +1,7 @@
 {
   "appname": "Leagues Checklist",
   "description": "Checklist for Leagues",
-  "appurl": "./Index.html",
+  "appurl": "./index.html",
   "iconUrl": "./Skills_icon.png",
   "defaultWidth": 283,
   "defaultHeight": 283,
