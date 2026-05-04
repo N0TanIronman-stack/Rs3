@@ -217,8 +217,8 @@ function dbg(s) {
       'font-family:monospace;font-size:9px;padding:3px;max-height:60px;overflow-y:auto;z-index:999;';
     document.body.appendChild(overlay);
   }
-  //overlay.innerHTML += s + '<br>';
-  //overlay.scrollTop = overlay.scrollHeight;
+  overlay.innerHTML += s + '<br>';
+  overlay.scrollTop = overlay.scrollHeight;
 }
 
 // ── Status ─────────────────────────────────────────────────
@@ -732,29 +732,41 @@ async function fetchPageHtml(title) {
 // ── Drop table parser ──────────────────────────────────────
 // Strip footnote markers like [1], [d1], [s2] etc
 function stripNotes(text) {
-  return text.replace(/\[\s*[a-z]?\d+\s*\]/gi, '').trim();
+  return text.replace(/\[\s*[a-z]?\s*\d+\s*\]/gi, '').trim();
 }
 
 function extractDrops(rawHtml) {
   const div = document.createElement('div');
   div.innerHTML = rawHtml;
 
-  // Find ALL drop headings (handles "Drops", "Drops (normal mode)", "Drops (hard mode)")
+  // Find ALL drop headings - check both span IDs and heading text
+  // MediaWiki encodes parentheses in IDs as .28 and .29, so
+  // "Drops (hard mode)" becomes id="Drops_.28hard_mode.29"
   const dropHeadings = [];
+  const seenEls = new Set();
+
+  // Method 1: span IDs containing "drop" (case insensitive)
   for (const span of div.querySelectorAll('span[id]')) {
-    if (span.id.toLowerCase().startsWith('drops')) {
+    if (span.id.toLowerCase().includes('drop')) {
       const el = span.closest('h2,h3,h4');
-      if (el) dropHeadings.push({ el, text: el.textContent.trim() });
-    }
-  }
-  if (dropHeadings.length === 0) {
-    for (const h of div.querySelectorAll('h2,h3,h4')) {
-      if (h.textContent.toLowerCase().includes('drop')) {
-        dropHeadings.push({ el: h, text: h.textContent.trim() });
-        break;
+      if (el && !seenEls.has(el)) {
+        seenEls.add(el);
+        dropHeadings.push({ el, text: el.textContent.trim() });
       }
     }
   }
+
+  // Method 2: heading text contains "drop" — catches any missed by ID search
+  for (const h of div.querySelectorAll('h2,h3,h4')) {
+    if (h.textContent.toLowerCase().includes('drop') && !seenEls.has(h)) {
+      seenEls.add(h);
+      dropHeadings.push({ el: h, text: h.textContent.trim() });
+    }
+  }
+
+  // Log all span IDs found for diagnosis
+  const allSpanIds = Array.from(div.querySelectorAll('span[id]')).map(s=>s.id);
+  dbg('Span IDs with "drop": ' + allSpanIds.filter(id=>id.toLowerCase().includes('drop')).join(', '));
 
   dbg('Drop headings: ' + dropHeadings.map(h=>h.text).join(' | '));
   if (dropHeadings.length === 0) return { normal: [], hard: [] };
@@ -772,12 +784,21 @@ function extractDrops(rawHtml) {
 
 function parseSectionsFromHeading(div, startEl) {
   const startLevel = parseInt(startEl.tagName[1]);
-
-  // Collect all h2/h3/h4/table elements in document order
   const allEls = Array.from(div.querySelectorAll('h2,h3,h4,table'));
 
-  // Find our start element
-  const startIdx = allEls.indexOf(startEl);
+  // Use contains() instead of indexOf() — closest() can return the same node
+  // but reference equality may fail across different query results
+  let startIdx = allEls.indexOf(startEl);
+  if (startIdx === -1) {
+    // Fallback: find by DOM position using contains
+    startIdx = allEls.findIndex(el =>
+      el === startEl || el.contains(startEl) || startEl.contains(el)
+    );
+  }
+
+  dbg('  parseSections: startEl=' + startEl.textContent.trim().slice(0,30) +
+      ' level=h' + startLevel + ' idx=' + startIdx + ' of ' + allEls.length);
+
   if (startIdx === -1) return [];
 
   const sections = [];
@@ -788,14 +809,14 @@ function parseSectionsFromHeading(div, startEl) {
     const tag = el.tagName.toLowerCase();
     const level = parseInt(tag[1]);
 
-    // Stop at same or higher level heading
-    if ((tag==='h2'||tag==='h3'||tag==='h4') && level <= startLevel) break;
-
+    if ((tag==='h2'||tag==='h3'||tag==='h4') && level <= startLevel) {
+      dbg('  stopping at: ' + el.textContent.trim().slice(0,30));
+      break;
+    }
     if (tag==='h3'||tag==='h4') {
       sectionName = stripNotes(el.textContent);
-      dbg('  Section: "' + sectionName + '"');
+      dbg('  section: "' + sectionName + '"');
     }
-
     if (tag==='table') {
       const rows = parseTable(el);
       if (rows.length > 0) {
