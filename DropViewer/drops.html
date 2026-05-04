@@ -217,8 +217,8 @@ function dbg(s) {
       'font-family:monospace;font-size:9px;padding:3px;max-height:60px;overflow-y:auto;z-index:999;';
     document.body.appendChild(overlay);
   }
-  //overlay.innerHTML += s + '<br>';
-  //overlay.scrollTop = overlay.scrollHeight;
+  overlay.innerHTML += s + '<br>';
+  overlay.scrollTop = overlay.scrollHeight;
 }
 
 // ── Status ─────────────────────────────────────────────────
@@ -315,8 +315,8 @@ async function loadMonsterList() {
 
 // ── Popular NPC fallback list ──────────────────────────────
 const POPULAR_NPCS = [
+//-Bosses-
   { name:'Abomination',icon:'⚔️',cat:'Boss' },
-  { name:'Abyssal demon',icon:'👹',cat:'Slayer' },
   { name:'Amascut, the Devourer',icon:'🐱',cat:'Boss' },
   { name:'The Ambassador',icon:'🪼',cat:'Boss' },
   { name:'Araxxi',icon:'🕷️',cat:'Boss' },
@@ -334,8 +334,6 @@ const POPULAR_NPCS = [
   { name:'Gate of Elidinis',icon:'⚒️',cat:'Boss' },
   { name:'General Graardor',icon:'⚔️',cat:'Boss' },
   { name:'Giant mole',icon:'🐭',cat:'Boss' },
-  { name:'Goblin',icon:'👺',cat:'Common' },
-  { name:'Greater demon',icon:'😈',cat:'Slayer' },
   { name:'Gregorovic',icon:'⚔️',cat:'Boss' },
   { name:'Har-Aken',icon:'🔥',cat:'Boss' },
   { name:'Helwyr',icon:'🐺',cat:'Boss' },
@@ -356,8 +354,6 @@ const POPULAR_NPCS = [
   { name:'Raksha',icon:'🦖',cat:'Boss' },
   { name:'Rasial',icon:'💀',cat:'Boss' },
   { name:'Rex Matriarchs',icon:'🦖',cat:'Boss' },
-  { name:'Ripper demon',icon:'👹',cat:'Slayer' },
-  { name:'Sanctum of Rebirth',icon:'⚔️',cat:'Dungeon' },
   { name:'Seiryu',icon:'🐉',cat:'Boss' },
   { name:'Silverquill, the Dreadhog',icon:'⚔️',cat:'Boss' },
   { name:'Solak, Guardian of the Grove',icon:'🌳',cat:'Boss' },
@@ -369,6 +365,160 @@ const POPULAR_NPCS = [
   { name:'Vorkath',icon:'🐉',cat:'Boss' },
   { name:'Yakamaru',icon:'🪼',cat:'Boss' },
   { name:"Zamorak, Lord of Chaos",icon:'😈',cat:'Boss' },
+//-Slayer-
+  { name:'Aberrant spectre', icon:'👻', cat:'Slayer' },
+  { name:'Abyssal beast', icon:'😈', cat:'Slayer' },
+  { name:'Abyssal demon', icon:'😈', cat:'Slayer' },
+  { name:'Abyssal lord', icon:'😈', cat:'Slayer' },
+  { name:'Abyssal savage', icon:'😈', cat:'Slayer' },
+  { name:'Acheron mammoth', icon:'🐘', cat:'Slayer' },
+  { name:'Airut', icon:'🐗', cat:'Slayer' },
+  { name:'Anagami', icon:'🐲', cat:'Slayer' },
+  { name:'Aquanite', icon:'💧', cat:'Slayer' },
+  { name:'Arhat', icon:'🐲', cat:'Slayer' },
+  { name:'Armoured phantom', icon:'👻', cat:'Slayer' },
+  { name:'Automaton Generator', icon:'🤖', cat:'Slayer' },
+  { name:'Automaton Guardian', icon:'🤖', cat:'Slayer' },
+  { name:'Automaton Tracer', icon:'🤖', cat:'Slayer' },
+
+  { name:'Banshee', icon:'👻', cat:'Slayer' },
+  { name:'Basilisk', icon:'🐍', cat:'Slayer' },
+  { name:'Beastmasters hound', icon:'🐕', cat:'Slayer' },
+  { name:'Bladed muspah', icon:'🧛', cat:'Slayer' },
+  { name:'Blood nihil', icon:'🩸', cat:'Slayer' },
+  { name:'Bloodveld', icon:'🩸', cat:'Slayer' },
+  { name:'Brine rat', icon:'🐀', cat:'Slayer' },
+  { name:'Brutish dinosaur', icon:'🦕', cat:'Slayer' },
+  { name:'Bulbour crawler', icon:'⚔️', cat:'Slayer' },
+
+  { name:'Camel warrior', icon:'🐪', cat:'Slayer' },
+  { name:'Capsarius', icon:'💎', cat:'Slayer' },
+  { name:'Cave bug', icon:'🐛', cat:'Slayer' },
+  { name:'Cave crawler', icon:'🐜', cat:'Slayer' },
+  { name:'Cave horror', icon:'😱', cat:'Slayer' },
+  { name:'Cave slime', icon:'🟢', cat:'Slayer' },
+  { name:'Cockatrice', icon:'🐔', cat:'Slayer' },
+  { name:'Corrupted kalphite guardian', icon:'🪲', cat:'Slayer' },  
+  { name:'Corrupted kalphite marauder', icon:'🪲', cat:'Slayer' },
+  { name:'Corrupted lizard', icon:'🦎', cat:'Slayer' },
+  { name:'Corrupted scarab', icon:'🪲', cat:'Slayer' },
+  { name:'Corrupted scorpion', icon:'🦂', cat:'Slayer' },
+  { name:'Corrupted worker', icon:'👨‍🌾', cat:'Slayer' },
+  { name:'Crawling hand', icon:'✋', cat:'Slayer' },
+  { name:'Crocodile akh', icon:'🐊', cat:'Slayer' },
+
+  { name:'Dark beast', icon:'🐺', cat:'Slayer' },
+  { name:'Desert lizard', icon:'🦎', cat:'Slayer' },
+  { name:'Desert strykewyrm', icon:'🐍', cat:'Slayer' },
+  { name:'Devil snare', icon:'🥀', cat:'Slayer' },
+  { name:'Dragonstone dragon', icon:'🐲', cat:'Slayer' },
+  { name:'Dust devil', icon:'🌪️', cat:'Slayer' },
+
+  { name:'Edimmu', icon:'🧟', cat:'Slayer' },
+
+  { name:'Feline akh', icon:'🐈', cat:'Slayer' },
+  { name:'Feral Dinosaur', icon:'🦕', cat:'Slayer' },
+  { name:'Fever spider', icon:'🕷️', cat:'Slayer' },
+  { name:'Force muspah', icon:'🧛', cat:'Slayer' },
+
+  { name:'Ganodermic beast', icon:'🍄', cat:'Slayer' },
+  { name:'Ganodermic runt', icon:'🍄', cat:'Slayer' },
+  { name:'Gargoyle', icon:'🗿', cat:'Slayer' },
+  { name:'Gelatinous abomination', icon:'🪼', cat:'Slayer' },
+  { name:'Gladius', icon:'🤺', cat:'Slayer' },
+  { name:'Gorilla akh', icon:'🦍', cat:'Slayer' },
+  { name:'Grifolapine', icon:'🍄', cat:'Slayer' },
+  { name:'Grifolaroo', icon:'🍄', cat:'Slayer' },
+
+  { name:'Harpie bug swarm', icon:'🪰', cat:'Slayer' },
+  { name:'Hydrix dragon', icon:'🐲', cat:'Slayer' },
+
+  { name:'Ice nihil', icon:'❄️', cat:'Slayer' },
+  { name:'Ice strykewyrm', icon:'❄️', cat:'Slayer' },
+  { name:'Imperial mage akh', icon:'✨', cat:'Slayer' },
+  { name:'Imperial ranger akh', icon:'🏹', cat:'Slayer' },
+  { name:'Imperial warrior akh', icon:'⚔️', cat:'Slayer' },
+  { name:'Infernal mage', icon:'🧙‍♂️', cat:'Slayer' },
+
+  { name:'Jelly', icon:'🧊', cat:'Slayer' },
+  { name:'Jungle strykewyrm', icon:'🐍', cat:'Slayer' },
+
+  { name:'Killerwatt', icon:'⚡', cat:'Slayer' },
+  { name:'Kurask', icon:'🌿', cat:'Slayer' },
+
+  { name:'Lampenflora', icon:'🪔', cat:'Slayer' },
+  { name:'Lava strykewyrm', icon:'🌋', cat:'Slayer' },
+  { name:'Legiones', icon:'💎', cat:'Slayer' },
+  { name:'Liverworts', icon:'🌺', cat:'Slayer' },
+  { name:'Luminous snaggler', icon:'🌿', cat:'Slayer' },
+
+  { name:'Mighty banshee', icon:'🎧', cat:'Slayer' },
+  { name:'Mogre', icon:'👹', cat:'Slayer' },
+  { name:'Molanisk', icon:'🐌', cat:'Slayer' },
+  { name:'Moss golem', icon:'🗿', cat:'Slayer' },
+  { name:'Mutated bloodveld', icon:'🩸', cat:'Slayer' },
+  { name:'Mutated jadinko baby', icon:'🦎', cat:'Slayer' },
+  { name:'Mutated jadinko guard', icon:'🦎', cat:'Slayer' },
+  { name:'Mutated jadinko male', icon:'🦎', cat:'Slayer' },
+  { name:'Mutated zygomite', icon:'🍄', cat:'Slayer' },
+
+  { name:'Nechryael', icon:'😈', cat:'Slayer' },
+  { name:'Night spider', icon:'🕷️', cat:'Slayer' },
+  { name:'Nightmare', icon:'🌙', cat:'Slayer' },
+  { name:'Nodon artificer', icon:'🐉', cat:'Slayer' },
+  { name:'Nodon enforcer', icon:'🐲', cat:'Slayer' },
+  { name:'Nodon engineer', icon:'🐉', cat:'Slayer' },
+  { name:'Nodon guard', icon:'🐲', cat:'Slayer' },
+  { name:'Nodon hunter', icon:'🐉', cat:'Slayer' },
+
+  { name:'Onyx dragon', icon:'🐲', cat:'Slayer' },
+
+  { name:'Profane Scabarite', icon:'🔥', cat:'Slayer' },
+  { name:'Pyrefiend', icon:'🐞', cat:'Slayer' },
+
+  { name:'Ripper demon', icon:'👹', cat:'Slayer' },
+  { name:'Ripper dinosaur', icon:'🦖', cat:'Slayer' },  
+  { name:'Risen ghost', icon:'👻', cat:'Slayer' },
+  { name:'Rockslug', icon:'🐌', cat:'Slayer' },
+  { name:'Rorarius', icon:'💎', cat:'Slayer' },
+
+  { name:'Sakadagami', icon:'💧', cat:'Slayer' },
+  { name:'Salawa akh', icon:'🐩', cat:'Slayer' },
+  { name:'Scarab akh', icon:'🪲', cat:'Slayer' },
+  { name:'Scutarius', icon:'🛡️', cat:'Slayer' },
+  { name:'Seeker', icon:'👁️', cat:'Slayer' },
+  { name:'Shadow nihil', icon:'🌑', cat:'Slayer' },
+  { name:'Siege engine', icon:'🚂', cat:'Slayer' },
+  { name:'Skeletal wyvern', icon:'☠️', cat:'Slayer' },
+  { name:'Slasher Demon', icon:'👹', cat:'Slayer' },
+  { name:'Smoke nihil', icon:'💨', cat:'Slayer' },
+  { name:'Sotapanna', icon:'💧', cat:'Slayer' },
+  { name:'Soulgazer', icon:'👁️', cat:'Slayer' },
+  { name:'Spiritual guardian', icon:'🧝', cat:'Slayer' },
+  { name:'Spiritual mage', icon:'🧝‍♂️', cat:'Slayer' },
+  { name:'Spiritual ranger', icon:'🧝‍♀️', cat:'Slayer' },
+  { name:'Spiritual warrior', icon:'🧞', cat:'Slayer' },
+
+  { name:'Terror dog', icon:'🐕', cat:'Slayer' },
+  { name:'Throwing muspah', icon:'🧛', cat:'Slayer' },
+  { name:'Turoth', icon:'🐉', cat:'Slayer' },
+
+  { name:'Unspeakable horror', icon:'🎭', cat:'Slayer' },
+
+  { name:'Venomous dinosaur', icon:'🦖', cat:'Slayer' },
+  { name:'Vinecrawler', icon:'🌿', cat:'Slayer' },
+
+  { name:'Wall beast', icon:'🧱', cat:'Slayer' },
+  { name:'Warped terrorbird', icon:'🐓', cat:'Slayer' },
+  { name:'Warped tortoise', icon:'🐢', cat:'Slayer' },
+  { name:'Wyvern', icon:'🐲', cat:'Slayer' },
+
+//-Dungeons-
+  { name:'Dragonkin Laboratory',icon:'⚔️',cat:'Dungeon' },
+  { name:'Sanctum of Rebirth',icon:'⚔️',cat:'Dungeon' },
+  { name:'Temple of Aminishi',icon:'⚔️',cat:'Dungeon' },
+  { name:'The Shadow Reef',icon:'⚔️',cat:'Dungeon' },
+  { name:'The Zamorakian Undercity',icon:'⚔️',cat:'Dungeon' },
 ];
 
 // ── Render NPC list ────────────────────────────────────────
