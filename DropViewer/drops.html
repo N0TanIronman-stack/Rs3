@@ -25,8 +25,12 @@ body {
   border-bottom: 2px solid var(--accent);
   padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
 }
+#npc-img {
+  width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated;
+  flex-shrink: 0; display: none; border-radius: 3px;
+}
 #titlebar .logo { font-size: 18px; }
-#titlebar .titles { flex: 1; }
+#titlebar .titles { flex: 1; min-width: 0; }
 #titlebar h1 { font-size: 13px; font-weight: 700; color: var(--gold); }
 #titlebar .subtitle { font-size: 11px; color: var(--dim); margin-top: 1px; }
 #close {
@@ -158,7 +162,8 @@ body {
 <body>
 
 <div id="titlebar">
-  <span class="logo">📜</span>
+  <img id="npc-img" alt="NPC"/>
+  <span class="logo" id="titlebar-logo">📜</span>
   <div class="titles">
     <h1>Drop Viewer</h1>
     <div class="subtitle" id="subtitle">Search any NPC</div>
@@ -229,6 +234,9 @@ function showBrowser() {
   document.getElementById('drops').style.display = 'none';
   document.getElementById('back-btn').style.display = 'none';
   document.getElementById('subtitle').textContent = 'Search any NPC';
+  // Reset NPC image back to logo
+  document.getElementById('npc-img').style.display = 'none';
+  document.getElementById('titlebar-logo').style.display = 'inline';
   inDropsView = false;
 }
 function showDisambig() {
@@ -291,8 +299,8 @@ async function loadMonsterList() {
 
     dbg(`Final monster count: ${allMonsters.length}`);
     document.getElementById('list-status').textContent = '';
-    document.getElementById('list-label').textContent = 'Popular monsters';
-    document.getElementById('list-count').textContent = 'Type';//allMonsters.length + ' total';
+    document.getElementById('list-label').textContent = 'All RS3 monsters';
+    document.getElementById('list-count').textContent = allMonsters.length + ' total';
     renderNpcList('');
 
   } catch(e) {
@@ -502,121 +510,151 @@ async function lookupPage(title) {
   setStatus('busy', `📄 Loading: ${title}...`);
   document.getElementById('subtitle').textContent = title;
 
-  // 2. Check for disambiguation
+  // Reset NPC image
+  const npcImg = document.getElementById('npc-img');
+  const logo   = document.getElementById('titlebar-logo');
+  npcImg.style.display = 'none';
+  logo.style.display   = 'inline';
+
+  // Check disambiguation
   try {
     const isDisambig = await checkDisambig(title);
     if (isDisambig) {
-      dbg(title + ' is a disambiguation page');
       setStatus('busy', `🔀 "${title}" is a disambiguation page...`);
       const links = await getDisambigLinks(title);
-      dbg('Disambig links: ' + links.join(', '));
       showDisambigOptions(title, links);
       return;
     }
-  } catch(e) {
-    dbg('Disambig check error: ' + e.message);
-    // Continue anyway
+  } catch(e) { /* continue */ }
+
+  // Fetch NPC image and page HTML in parallel
+  const [imgUrl, html] = await Promise.all([
+    fetchNpcImage(title),
+    fetchPageHtml(title),
+  ]);
+
+  // Show NPC image if found
+  if (imgUrl) {
+    npcImg.src = imgUrl;
+    npcImg.style.display = 'block';
+    logo.style.display   = 'none';
+    npcImg.onerror = () => { npcImg.style.display='none'; logo.style.display='inline'; };
   }
 
-  // 3. Fetch page HTML
-  let html = '';
-  try {
-    const r = await fetch(`${WIKI}?action=parse&page=${encodeURIComponent(title)}&prop=text&format=json&origin=*`);
-    const d = await r.json();
-    html = d?.parse?.text?.['*'] || '';
-  } catch(e) {
-    setStatus('err', '❌ Failed to load wiki page: ' + e.message); return;
-  }
   if (!html) { setStatus('err', '❌ Empty page.'); return; }
 
-  // 4. Extract drops
-  const sections = extractDrops(html);
-  const total = sections.reduce((s,sec) => s + sec.rows.length, 0);
+  // Extract drops — returns { normal: sections[], hard: sections[] }
+  const { normal, hard } = extractDrops(html);
+  const totalNormal = normal.reduce((s,sec) => s + sec.rows.length, 0);
+  const totalHard   = hard.reduce((s,sec)   => s + sec.rows.length, 0);
+  const total = totalNormal + totalHard;
 
   if (total === 0) {
     setStatus('err', `⚠️ No drop table found for "${title}".`);
     return;
   }
 
-  setStatus('ok', `✅ ${total} drops for ${title}`);
+  setStatus('ok', `✅ ${total} drops for ${title}` + (hard.length ? ' (Normal + Hard mode)' : ''));
   showDrops();
-  renderSections(sections);
+  renderAllSections(normal, hard);
+}
+
+async function fetchNpcImage(title) {
+  try {
+    const url = `${WIKI}?action=query&prop=pageimages&titles=${encodeURIComponent(title)}&pithumbsize=80&piprop=thumbnail&format=json&origin=*`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const pages = d?.query?.pages;
+    if (!pages) return null;
+    const page = Object.values(pages)[0];
+    return page?.thumbnail?.source || null;
+  } catch(e) { return null; }
+}
+
+async function fetchPageHtml(title) {
+  try {
+    const r = await fetch(`${WIKI}?action=parse&page=${encodeURIComponent(title)}&prop=text&format=json&origin=*`);
+    const d = await r.json();
+    return d?.parse?.text?.['*'] || '';
+  } catch(e) { return ''; }
 }
 
 // ── Drop table parser ──────────────────────────────────────
+// Strip footnote markers like [1], [d1], [s2] etc
+function stripNotes(text) {
+  return text.replace(/\[\s*[a-z]?\d+\s*\]/gi, '').trim();
+}
+
 function extractDrops(rawHtml) {
   const div = document.createElement('div');
   div.innerHTML = rawHtml;
 
-  // Find the Drops heading
-  let startEl = null;
+  // Find ALL drop headings (handles "Drops", "Drops (normal mode)", "Drops (hard mode)")
+  const dropHeadings = [];
   for (const span of div.querySelectorAll('span[id]')) {
-    if (span.id.startsWith('Drops')) { startEl = span.closest('h2,h3,h4'); break; }
-  }
-  if (!startEl) {
-    for (const h of div.querySelectorAll('h2,h3,h4')) {
-      if (h.textContent.includes('Drop')) { startEl = h; break; }
+    if (span.id.toLowerCase().startsWith('drops')) {
+      const el = span.closest('h2,h3,h4');
+      if (el) dropHeadings.push({ el, text: el.textContent.trim() });
     }
   }
-  if (!startEl) return [];
-
-  const startLevel = parseInt(startEl.tagName[1]);
-
-  // Walk the entire DOM in document order using a TreeWalker.
-  // This correctly finds h3/h4 and table elements regardless of nesting depth,
-  // in the exact order they appear on the page.
-  const walker = document.createTreeWalker(
-    div,
-    NodeFilter.SHOW_ELEMENT,
-    {
-      acceptNode(node) {
-        const t = node.tagName.toLowerCase();
-        // Accept headings and tables — skip everything else
-        if (t === 'h2' || t === 'h3' || t === 'h4' || t === 'table') {
-          return NodeFilter.FILTER_ACCEPT;
-        }
-        // Skip into children of other elements
-        return NodeFilter.FILTER_SKIP;
+  if (dropHeadings.length === 0) {
+    for (const h of div.querySelectorAll('h2,h3,h4')) {
+      if (h.textContent.toLowerCase().includes('drop')) {
+        dropHeadings.push({ el: h, text: h.textContent.trim() });
+        break;
       }
     }
-  );
+  }
 
-  // Advance walker to startEl
-  let node = walker.nextNode();
-  while (node && node !== startEl) node = walker.nextNode();
+  dbg('Drop headings: ' + dropHeadings.map(h=>h.text).join(' | '));
+  if (dropHeadings.length === 0) return { normal: [], hard: [] };
 
-  // Now collect everything after startEl
+  const normal = [], hard = [];
+  for (const heading of dropHeadings) {
+    const isHard = heading.text.toLowerCase().includes('hard');
+    const sections = parseSectionsFromHeading(div, heading.el);
+    dbg((isHard?'Hard':'Normal') + ': ' + sections.length + ' sections');
+    if (isHard) hard.push(...sections);
+    else        normal.push(...sections);
+  }
+  return { normal, hard };
+}
+
+function parseSectionsFromHeading(div, startEl) {
+  const startLevel = parseInt(startEl.tagName[1]);
+
+  // Collect all h2/h3/h4/table elements in document order
+  const allEls = Array.from(div.querySelectorAll('h2,h3,h4,table'));
+
+  // Find our start element
+  const startIdx = allEls.indexOf(startEl);
+  if (startIdx === -1) return [];
+
   const sections = [];
   let sectionName = 'Drops';
-  let h3count = 0;
 
-  node = walker.nextNode();
-  while (node) {
-    const tag = node.tagName.toLowerCase();
+  for (let i = startIdx + 1; i < allEls.length; i++) {
+    const el  = allEls[i];
+    const tag = el.tagName.toLowerCase();
     const level = parseInt(tag[1]);
 
-    // Stop at same-level or higher heading (e.g. next h2 section)
-    if ((tag === 'h2' || tag === 'h3' || tag === 'h4') && level <= startLevel) break;
+    // Stop at same or higher level heading
+    if ((tag==='h2'||tag==='h3'||tag==='h4') && level <= startLevel) break;
 
-    if (tag === 'h3' || tag === 'h4') {
-      sectionName = node.textContent.replace(/\[.*?\]/g, '').trim();
-      h3count++;
-      dbg('Heading: "' + sectionName + '" (' + tag + ')');
+    if (tag==='h3'||tag==='h4') {
+      sectionName = stripNotes(el.textContent);
+      dbg('  Section: "' + sectionName + '"');
     }
 
-    if (tag === 'table') {
-      const rows = parseTable(node);
+    if (tag==='table') {
+      const rows = parseTable(el);
       if (rows.length > 0) {
         const existing = sections.find(s => s.name === sectionName);
         if (existing) existing.rows.push(...rows);
         else sections.push({ name: sectionName, rows });
       }
     }
-
-    node = walker.nextNode();
   }
-
-  dbg('Subheadings: ' + h3count + ', sections: ' + sections.length);
   return sections;
 }
 
@@ -627,85 +665,105 @@ function parseTable(table) {
     if (tds.length < 2) continue;
     let name='', qty='', rarity='', img='';
     for (const td of tds) {
-      const text = td.textContent.trim();
+      const text = stripNotes(td.textContent.trim());
       if (!img) {
         const i = td.querySelector('img');
         if (i) img = fixIconUrl(i.getAttribute('src') || i.src || '');
       }
       if (!name && td.querySelector('a')) {
         const a = td.querySelector('a');
-        const c = a.textContent.trim();
+        const c = stripNotes(a.textContent.trim());
         if (c.length > 1 && c.length < 80 && !c.match(/^\d+$/)) name = c;
       }
       if (!qty && /^\d[\d,–\-\s]*$/.test(text) && text.length < 20) qty = text;
       if (!rarity && /^(always|\d[\d,]*\s*\/\s*[\d,]+)/i.test(text)) {
-        rarity = text.split(';')[0].trim();
+        rarity = stripNotes(text.split(';')[0].trim());
       }
     }
     if (!name || name.length > 80) continue;
     if (name.toLowerCase()==='item'||name.toLowerCase()==='items') continue;
     rows.push({ name, qty, rarity, img });
   }
-  return rows;
+  // Deduplicate rows with the same name (caused by multi-note table rows)
+  const seen = new Set();
+  return rows.filter(r => {
+    if (seen.has(r.name)) return false;
+    seen.add(r.name);
+    return true;
+  });
 }
 
 // ── Render drops ───────────────────────────────────────────
-function renderSections(sections) {
-  const container = document.getElementById('drops');
-  container.innerHTML = '';
+function renderModeBlock(container, modeLabel, modeColor, sections) {
+  if (sections.length === 0) return;
+
+  // Mode header (e.g. "Normal Mode" / "Hard Mode")
+  const modeHdr = document.createElement('div');
+  modeHdr.style.cssText = `background:${modeColor};padding:5px 12px;font-size:11px;` +
+    `font-weight:700;letter-spacing:1px;color:#fff;border-bottom:2px solid rgba(0,0,0,0.3);` +
+    `text-transform:uppercase;position:sticky;top:0;z-index:2;`;
+  modeHdr.textContent = modeLabel;
+  container.appendChild(modeHdr);
 
   for (const sec of sections) {
     if (sec.rows.length === 0) continue;
-
-    // Section wrapper
-    const wrapper = document.createElement('div');
-    wrapper.className = 'section-wrapper';
-
-    // Header (clickable)
-    const hdr = document.createElement('div');
-    hdr.className = 'section-hdr';
-    hdr.innerHTML = `
-      <span class="hdr-left">
-        <span class="chevron">▼</span>
-        <span>${sec.name}</span>
-      </span>
-      <span class="row-count">${sec.rows.length} items</span>`;
-
-    // Body
-    const body = document.createElement('div');
-    body.className = 'section-body';
-
-    // Populate rows
-    for (const row of sec.rows) {
-      body.appendChild(makeDropRow(row));
-    }
-
-    // Set initial max-height for animation
-    // We set it after append so the browser knows the height
-    requestAnimationFrame(() => {
-      body.style.maxHeight = body.scrollHeight + 'px';
-    });
-
-    // Toggle on click
-    hdr.addEventListener('click', () => {
-      const collapsed = hdr.classList.toggle('collapsed');
-      if (collapsed) {
-        body.style.maxHeight = body.scrollHeight + 'px'; // set explicit before collapsing
-        requestAnimationFrame(() => body.classList.add('collapsed'));
-      } else {
-        body.classList.remove('collapsed');
-        body.style.maxHeight = body.scrollHeight + 'px';
-        // After transition, remove fixed height so it can grow
-        body.addEventListener('transitionend', () => {
-          if (!hdr.classList.contains('collapsed')) body.style.maxHeight = 'none';
-        }, { once: true });
-      }
-    });
-
-    wrapper.appendChild(hdr);
-    wrapper.appendChild(body);
-    container.appendChild(wrapper);
+    container.appendChild(makeSectionBlock(sec));
   }
+}
+
+function renderAllSections(normal, hard) {
+  const container = document.getElementById('drops');
+  container.innerHTML = '';
+
+  if (hard.length > 0) {
+    // Has both modes — show mode headers
+    renderModeBlock(container, '⚔ Normal Mode', '#1a5c2a', normal);
+    renderModeBlock(container, '💀 Hard Mode',  '#5c1a1a', hard);
+  } else {
+    // Single mode — just render sections directly
+    for (const sec of normal) {
+      if (sec.rows.length === 0) continue;
+      container.appendChild(makeSectionBlock(sec));
+    }
+  }
+}
+
+function makeSectionBlock(sec) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'section-wrapper';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'section-hdr';
+  hdr.innerHTML = `
+    <span class="hdr-left">
+      <span class="chevron">▼</span>
+      <span>${sec.name}</span>
+    </span>
+    <span class="row-count">${sec.rows.length} items</span>`;
+
+  const body = document.createElement('div');
+  body.className = 'section-body';
+  for (const row of sec.rows) body.appendChild(makeDropRow(row));
+
+  requestAnimationFrame(() => { body.style.maxHeight = body.scrollHeight + 'px'; });
+
+  hdr.addEventListener('click', () => {
+    const collapsed = hdr.classList.toggle('collapsed');
+    if (collapsed) {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      requestAnimationFrame(() => body.classList.add('collapsed'));
+    } else {
+      body.classList.remove('collapsed');
+      body.style.maxHeight = body.scrollHeight + 'px';
+      body.addEventListener('transitionend', () => {
+        if (!hdr.classList.contains('collapsed')) body.style.maxHeight = 'none';
+      }, { once: true });
+    }
+  });
+
+  wrapper.appendChild(hdr);
+  wrapper.appendChild(body);
+  return wrapper;
 }
 
 function makeDropRow(row) {
@@ -755,7 +813,10 @@ searchInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') { const v = searchInput.value.trim(); if (v) lookup(v); }
 });
 document.getElementById('back-btn').addEventListener('click', () => {
-  showBrowser(); renderNpcList(searchInput.value); setStatus('', '');
+  showBrowser();
+  searchInput.value = '';
+  renderNpcList('');
+  setStatus('', '');
 });
 document.getElementById('close').addEventListener('click', () => {
   fetch('https://bolt-api/close', { method:'POST' }).catch(()=>{});
