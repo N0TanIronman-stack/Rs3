@@ -291,8 +291,8 @@ async function loadMonsterList() {
 
     dbg(`Final monster count: ${allMonsters.length}`);
     document.getElementById('list-status').textContent = '';
-    document.getElementById('list-label').textContent = 'All RS3 monsters';
-    document.getElementById('list-count').textContent = allMonsters.length + ' total';
+    document.getElementById('list-label').textContent = 'Popular monsters';
+    document.getElementById('list-count').textContent = 'Type';//allMonsters.length + ' total';
     renderNpcList('');
 
   } catch(e) {
