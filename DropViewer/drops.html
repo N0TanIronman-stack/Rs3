@@ -1014,7 +1014,6 @@ window.addEventListener('message', evt => {
 const isAlt1 = typeof window.alt1 !== 'undefined';
 
 if (isAlt1) {
-  // Badge
   const badge = document.createElement('div');
   badge.style.cssText = 'position:fixed;top:4px;right:30px;background:#e94560;color:#fff;' +
     'font-size:9px;padding:1px 5px;border-radius:2px;font-weight:700;z-index:100;';
@@ -1023,52 +1022,100 @@ if (isAlt1) {
 
   setStatus('ok', '✅ Alt1 — right-click NPC → hover Examine → press Alt+1');
 
-  // Dump everything on window.alt1 so we know what's available
-  try {
-    const keys = Object.keys(window.alt1);
-    dbg('alt1 keys: ' + keys.join(', '));
-    // Also check for nested events
-    if (window.alt1.events) {
-      dbg('alt1.events keys: ' + Object.keys(window.alt1.events).join(', '));
-    }
-  } catch(e) { dbg('alt1 inspection error: ' + e.message); }
+  // bindReadRightClickString reads the RS3 right-click context menu text.
+  // We bind it once, then poll it via setInterval.
+  // When it contains "Examine", we extract the NPC name and look it up.
+  let rcBind = null;
+  let lastExamine = '';
+  let alt1Listening = false;
 
-  // openInfo
-  if (window.alt1.openInfo) {
-    dbg('openInfo: ' + JSON.stringify(window.alt1.openInfo));
-    const name = parseExamineText(window.alt1.openInfo);
-    if (name) setTimeout(() => lookup(name), 300);
-  }
+  function setupAlt1Polling() {
+    try {
+      rcBind = window.alt1.bindReadRightClickString(0, 0, 400, 600);
+      dbg('bindReadRightClickString bind id: ' + rcBind);
 
-  // Try every known variant of the alt1pressed event API
-  if (window.alt1.events && window.alt1.events.alt1pressed) {
-    window.alt1.events.alt1pressed.push(function(e) {
-      dbg('alt1pressed (events) x=' + e.x + ' y=' + e.y);
-      handleAlt1Press(e.x, e.y);
-    });
-    dbg('alt1pressed handler registered via alt1.events');
-  } else if (window.alt1.on) {
-    window.alt1.on('alt1pressed', function(e) {
-      dbg('alt1pressed (on) x=' + e.x + ' y=' + e.y);
-      handleAlt1Press(e.x, e.y);
-    });
-    dbg('alt1pressed handler registered via alt1.on');
-  } else {
-    // Last resort: poll for the event being added
-    dbg('WARNING: alt1.events.alt1pressed not available — trying window event');
-    window.addEventListener('alt1pressed', function(e) {
-      dbg('alt1pressed (window event)');
-      handleAlt1Press(e.detail ? e.detail.x : 0, e.detail ? e.detail.y : 0);
-    });
-    // Also try the a1lib approach — some versions expose it differently
-    if (window.a1lib && window.a1lib.on) {
-      window.a1lib.on('alt1pressed', function(e) {
-        dbg('alt1pressed (a1lib.on) x=' + e.x + ' y=' + e.y);
-        handleAlt1Press(e.x, e.y);
-      });
-      dbg('alt1pressed handler registered via a1lib.on');
+      // Poll every 500ms for right-click menu text containing "Examine"
+      setInterval(function() {
+        if (!alt1Listening) return;
+        try {
+          const text = window.alt1.bindGetRegion(rcBind, 0, 0, 400, 600);
+          if (text && text !== lastExamine) {
+            dbg('RC text: ' + text);
+            const name = parseExamineText(text);
+            if (name) {
+              lastExamine = text;
+              dbg('Examine found: ' + name);
+              lookup(name);
+            }
+          }
+        } catch(e) { /* silent */ }
+      }, 500);
+
+      dbg('Right-click polling set up');
+    } catch(e) {
+      dbg('bindReadRightClickString error: ' + e.message);
     }
   }
+
+  // Alt+1 toggles listening mode on/off
+  // Since alt1.events isn't available, we use window keydown as fallback
+  // and also hook the window alt1pressed event in every form we can find
+  function onAlt1Press() {
+    alt1Listening = !alt1Listening;
+    if (alt1Listening) {
+      lastExamine = '';
+      setStatus('busy', '👂 Listening — hover Examine on right-click menu...');
+      dbg('Listening started');
+      // Auto-stop after 8 seconds
+      setTimeout(function() {
+        if (alt1Listening) {
+          alt1Listening = false;
+          setStatus('ok', '✅ Alt1 — right-click NPC → hover Examine → press Alt+1');
+          dbg('Listening timed out');
+        }
+      }, 8000);
+    } else {
+      setStatus('ok', '✅ Alt1 — right-click NPC → hover Examine → press Alt+1');
+      dbg('Listening stopped');
+    }
+  }
+
+  // Try every known event hook
+  window.addEventListener('alt1pressed', onAlt1Press);
+  window.addEventListener('keydown', function(e) {
+    if (e.altKey && e.key === '1') { e.preventDefault(); onAlt1Press(); }
+  });
+
+  // Also try the direct bindReadRightClickString approach —
+  // read on a 200ms interval always, look for Examine text
+  // This way it works even without the event firing
+  function setupPassiveRead() {
+    try {
+      let lastRead = '';
+      setInterval(function() {
+        try {
+          const mp = window.alt1.mousePosition;
+          if (!mp) return;
+          const text = window.alt1.bindReadRightClickString(mp.x - 10, mp.y - 10, 300, 200);
+          if (text && typeof text === 'string' && text !== lastRead) {
+            lastRead = text;
+            dbg('passive RC: ' + text);
+            const name = parseExamineText(text);
+            if (name && name !== lastExamine) {
+              lastExamine = name;
+              dbg('passive Examine: ' + name);
+              lookup(name);
+            }
+          }
+        } catch(e) { /* silent */ }
+      }, 300);
+      dbg('Passive right-click reading active');
+    } catch(e) {
+      dbg('Passive read error: ' + e.message);
+    }
+  }
+
+  setupPassiveRead();
 }
 
 function parseExamineText(text) {
