@@ -1010,10 +1010,118 @@ window.addEventListener('message', evt => {
   }
 });
 
+// ── Alt1 Integration ───────────────────────────────────────
+// Detect if we're running inside Alt1
+const isAlt1 = typeof window.alt1 !== 'undefined';
+
+if (isAlt1) {
+  // Tell Alt1 what size we want and request screen capture permission
+  window.alt1.identifyAppUrl('./appconfig.json');
+
+  // Show a small indicator that Alt1 mode is active
+  const badge = document.createElement('div');
+  badge.style.cssText = 'position:fixed;top:4px;right:30px;background:#e94560;color:#fff;' +
+    'font-size:9px;padding:1px 5px;border-radius:2px;font-weight:700;z-index:100;';
+  badge.textContent = 'ALT1';
+  document.body.appendChild(badge);
+
+  setStatus('ok', '✅ Alt1 active — press Alt+1 over the Examine option to auto-search');
+
+  // ── Alt+1 keybind handler ────────────────────────────────
+  // When user presses Alt+1 with cursor over "Examine NpcName" on
+  // the right-click menu, Alt1 sends us the text under the cursor.
+  window.addEventListener('alt1pressed', () => {
+    try {
+      readExamineFromScreen();
+    } catch(e) {
+      dbg('alt1pressed error: ' + e.message);
+    }
+  });
+}
+
+async function readExamineFromScreen() {
+  if (!isAlt1) return;
+
+  // Capture a region around the mouse cursor to read the context menu
+  const mouseX = window.alt1.mousePosition ? window.alt1.mousePosition.x : 0;
+  const mouseY = window.alt1.mousePosition ? window.alt1.mousePosition.y : 0;
+
+  // Capture a 300x300 region centred on the mouse — big enough to catch the menu
+  const captureX = Math.max(0, mouseX - 150);
+  const captureY = Math.max(0, mouseY - 50);
+  const img = window.alt1.captureHold(captureX, captureY, 300, 300);
+
+  if (!img) {
+    setStatus('err', '❌ Alt1: screen capture failed — check capture permissions');
+    return;
+  }
+
+  // Use Alt1's built-in OCR to read text from the captured region
+  // The RS3 context menu uses a specific font; we read all text and
+  // look for a line containing "Examine"
+  const a1lib = await import('alt1/base');
+  const chatbox = await import('alt1/chatbox');
+
+  // Read text from the captured image using RS3's interface font
+  const imgRef = new a1lib.ImgRef(img, captureX, captureY);
+  const ocr    = await import('alt1/ocr');
+
+  // RS3 uses "chatbox" font for context menus too
+  // Try to find "Examine" text followed by the NPC name
+  const lines = chatbox.default.readLines(imgRef);
+
+  if (!lines || lines.length === 0) {
+    // Fallback: use the raw alt1 text from the event
+    const rawText = window.alt1.getMouseText ? window.alt1.getMouseText() : '';
+    dbg('Raw alt1 mouse text: ' + rawText);
+    const npcName = parseExamineText(rawText);
+    if (npcName) {
+      setStatus('busy', `🔍 Alt1 detected: "${npcName}"`);
+      lookup(npcName);
+    } else {
+      setStatus('err', '❌ No Examine option found — hover over the right-click menu and press Alt+1');
+    }
+    return;
+  }
+
+  // Search lines for one starting with "Examine"
+  for (const line of lines) {
+    const text = line.text || (typeof line === 'string' ? line : '');
+    const npcName = parseExamineText(text);
+    if (npcName) {
+      setStatus('busy', `🔍 Alt1 detected: "${npcName}"`);
+      lookup(npcName);
+      return;
+    }
+  }
+
+  setStatus('err', '❌ No Examine option found in capture area');
+}
+
+// Parse "Examine Goblin" or "Examine: Goblin" → "Goblin"
+// Also handles the alt1pressed raw text which sends the full right-click line
+function parseExamineText(text) {
+  if (!text) return null;
+  // Match "Examine" followed by the NPC name
+  // RS3 format: "Examine Goblin" or just "Goblin" if alt1 already stripped the verb
+  const m = text.match(/\bExamine\s+(.+)/i);
+  if (m) return m[1].trim();
+  return null;
+}
+
+// ── Alt1 app config (needed for Alt1 to recognise this as an app) ───
+// This creates the appconfig.json data inline so no separate file is needed
+// when testing. For production, create a proper appconfig.json.
+if (isAlt1 && !window._alt1AppRegistered) {
+  window._alt1AppRegistered = true;
+  // Register the app with Alt1 so it receives alt1pressed events
+  window.alt1.overrideCapture = true;
+}
+
 // ── Init ───────────────────────────────────────────────────
 showBrowser();
 searchInput.focus();
-loadMonsterList();  // async load full monster list in background
+loadMonsterList();
 </script>
 </body>
 </html>
