@@ -1023,26 +1023,51 @@ if (isAlt1) {
 
   setStatus('ok', '✅ Alt1 — right-click NPC → hover Examine → press Alt+1');
 
-  // Case 1: app was CLOSED when Alt+1 was pressed.
-  // Alt1 opened us because our activator phrase matched.
-  // The matched text is in window.alt1.openInfo.
+  // Dump everything on window.alt1 so we know what's available
+  try {
+    const keys = Object.keys(window.alt1);
+    dbg('alt1 keys: ' + keys.join(', '));
+    // Also check for nested events
+    if (window.alt1.events) {
+      dbg('alt1.events keys: ' + Object.keys(window.alt1.events).join(', '));
+    }
+  } catch(e) { dbg('alt1 inspection error: ' + e.message); }
+
+  // openInfo
   if (window.alt1.openInfo) {
-    dbg('openInfo: ' + window.alt1.openInfo);
+    dbg('openInfo: ' + JSON.stringify(window.alt1.openInfo));
     const name = parseExamineText(window.alt1.openInfo);
     if (name) setTimeout(() => lookup(name), 300);
   }
 
-  // Case 2: app was ALREADY OPEN when Alt+1 was pressed.
-  // alt1.events.alt1pressed fires with {x, y} mouse coords.
-  // We then capture the screen region and OCR it ourselves.
+  // Try every known variant of the alt1pressed event API
   if (window.alt1.events && window.alt1.events.alt1pressed) {
     window.alt1.events.alt1pressed.push(function(e) {
-      dbg('alt1pressed x=' + e.x + ' y=' + e.y);
+      dbg('alt1pressed (events) x=' + e.x + ' y=' + e.y);
       handleAlt1Press(e.x, e.y);
     });
-    dbg('alt1pressed handler registered');
+    dbg('alt1pressed handler registered via alt1.events');
+  } else if (window.alt1.on) {
+    window.alt1.on('alt1pressed', function(e) {
+      dbg('alt1pressed (on) x=' + e.x + ' y=' + e.y);
+      handleAlt1Press(e.x, e.y);
+    });
+    dbg('alt1pressed handler registered via alt1.on');
   } else {
-    dbg('WARNING: alt1.events.alt1pressed not available');
+    // Last resort: poll for the event being added
+    dbg('WARNING: alt1.events.alt1pressed not available — trying window event');
+    window.addEventListener('alt1pressed', function(e) {
+      dbg('alt1pressed (window event)');
+      handleAlt1Press(e.detail ? e.detail.x : 0, e.detail ? e.detail.y : 0);
+    });
+    // Also try the a1lib approach — some versions expose it differently
+    if (window.a1lib && window.a1lib.on) {
+      window.a1lib.on('alt1pressed', function(e) {
+        dbg('alt1pressed (a1lib.on) x=' + e.x + ' y=' + e.y);
+        handleAlt1Press(e.x, e.y);
+      });
+      dbg('alt1pressed handler registered via a1lib.on');
+    }
   }
 }
 
