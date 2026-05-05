@@ -1030,7 +1030,7 @@ if (isAlt1) {
   // ── Alt+1 keybind handler ────────────────────────────────
   // When user presses Alt+1 with cursor over "Examine NpcName" on
   // the right-click menu, Alt1 sends us the text under the cursor.
-  window.addEventListener('alt1pressed', () => {
+  window.alt1.events.on('alt1pressed', () => {
     try {
       readExamineFromScreen();
     } catch(e) {
@@ -1056,15 +1056,9 @@ async function readExamineFromScreen() {
     return;
   }
 
-  // Use Alt1's built-in OCR to read text from the captured region
-  // The RS3 context menu uses a specific font; we read all text and
-  // look for a line containing "Examine"
-  const a1lib = await import('alt1/base');
-  const chatbox = await import('alt1/chatbox');
-
   // Read text from the captured image using RS3's interface font
-  const imgRef = new a1lib.ImgRef(img, captureX, captureY);
-  const ocr    = await import('alt1/ocr');
+  const imgRef = new alt1.base.ImgRef(img, captureX, captureY);
+  const lines = alt1.chatbox.readLines(imgRef);
 
   // RS3 uses "chatbox" font for context menus too
   // Try to find "Examine" text followed by the NPC name
@@ -1073,6 +1067,13 @@ async function readExamineFromScreen() {
   if (!lines || lines.length === 0) {
     // Fallback: use the raw alt1 text from the event
     const rawText = window.alt1.getMouseText ? window.alt1.getMouseText() : '';
+    const npcName = parseExamineText(rawText);
+
+    if (npcName) {
+      lookup(npcName);
+      return;
+    }
+    
     dbg('Raw alt1 mouse text: ' + rawText);
     const npcName = parseExamineText(rawText);
     if (npcName) {
